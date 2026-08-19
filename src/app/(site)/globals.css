@@ -1,0 +1,192 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-instrument-serif);
+  --font-heading: var(--font-instrument-serif);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-hairline: var(--hairline);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+}
+
+/* ------------------------------------------------------------------
+   Palette strictement monochrome : encre noire sur papier blanc.
+   Aucune teinte (chroma = 0) nulle part.
+   ------------------------------------------------------------------ */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.145 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.965 0 0);
+  --secondary-foreground: oklch(0.145 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.53 0 0);
+  --accent: oklch(0.945 0 0);
+  --accent-foreground: oklch(0.145 0 0);
+  --destructive: oklch(0.145 0 0);
+  --border: oklch(0.86 0 0);
+  --hairline: oklch(0.78 0 0);
+  --input: oklch(0.86 0 0);
+  --ring: oklch(0.145 0 0);
+  --radius: 0rem;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.185 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.98 0 0);
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.66 0 0);
+  --accent: oklch(0.26 0 0);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 22%);
+  --hairline: oklch(1 0 0 / 32%);
+  --input: oklch(1 0 0 / 22%);
+  --ring: oklch(0.98 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    @apply bg-foreground text-background;
+  }
+  h1, h2, h3 {
+    @apply font-display font-normal;
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer components {
+  /* Micro-libellés typographiés à la façon d'une légende de carte IGN. */
+  .label {
+    @apply font-mono text-[0.6875rem] uppercase tracking-[0.18em] leading-none;
+  }
+  .label-sm {
+    @apply font-mono text-[0.625rem] uppercase tracking-[0.2em] leading-none;
+  }
+
+  /* Filet fin plein largeur. */
+  .rule {
+    @apply h-px w-full bg-border;
+  }
+
+  /* Trame de papier vieilli : bruit monochrome très discret. */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .dark .grain::after {
+    mix-blend-mode: screen;
+    opacity: 0.06;
+  }
+
+  /* Les repères de la carte grossissent sur petit écran : le viewBox est
+     fixe, donc sans cela numéros et noms deviennent illisibles. */
+  .map-marker {
+    --marker-scale: 1.7;
+  }
+  .map-legend {
+    --legend-scale: 1.6;
+  }
+  @media (min-width: 640px) {
+    .map-marker {
+      --marker-scale: 1.25;
+    }
+    .map-legend {
+      --legend-scale: 1.25;
+    }
+  }
+  @media (min-width: 1024px) {
+    .map-marker {
+      --marker-scale: 1;
+    }
+    .map-legend {
+      --legend-scale: 1;
+    }
+  }
+
+  /* Fond quadrillé façon papier millimétré, utilisé sur la carte. */
+  .graph-paper {
+    background-image:
+      linear-gradient(to right, var(--hairline) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--hairline) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.16;
+  }
+
+  /* Lien souligné à l'ancienne, l'épaisseur seule change au survol. */
+  .link-underline {
+    @apply underline decoration-1 underline-offset-4 decoration-muted-foreground/50;
+    transition: text-decoration-color 200ms ease;
+  }
+  .link-underline:hover {
+    @apply decoration-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
