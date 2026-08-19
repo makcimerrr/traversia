@@ -12,7 +12,9 @@ import type { Adventure, Difficulty } from "./types"
  * `adventures` sans qu'aucun composant ne change.
  */
 
-const usePayload = Boolean(process.env.DATABASE_URI && process.env.PAYLOAD_SECRET)
+const usePayload = Boolean(
+  (process.env.DATABASE_URI || process.env.DATABASE_URL) && process.env.PAYLOAD_SECRET,
+)
 
 type ArrayItem = { label?: string | null }
 

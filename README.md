@@ -15,7 +15,7 @@ sont en revanche déjà en place pour prendre le relais.
 | Interface | Tailwind CSS 4 + shadcn/ui (base Radix) |
 | CMS | Payload 3, monté dans la même application |
 | Base | PostgreSQL (`@payloadcms/db-postgres`) |
-| Médias | Cloudflare R2 via `@payloadcms/storage-s3` |
+| Médias | Vercel Blob via `@payloadcms/storage-vercel-blob` |
 
 ## Démarrer
 
@@ -25,29 +25,34 @@ pnpm dev
 ```
 
 Aucune variable d'environnement n'est nécessaire pour lancer le site : sans
-`DATABASE_URI`, les pages servent le contenu de démonstration de
-`src/lib/adventures.ts`. `pnpm build` fonctionne également sans base.
+base, les pages servent le contenu de démonstration de `src/lib/adventures.ts`.
+`pnpm build` fonctionne également sans base.
+
+Sur une machine liée au projet Vercel, `vercel env pull .env` récupère les
+variables réelles (base Neon, jeton Blob, secret Payload).
 
 ## Brancher Payload
 
 1. Copier `.env.example` vers `.env` et renseigner :
    - `PAYLOAD_SECRET` — une chaîne aléatoire longue ;
-   - `DATABASE_URI` — un Postgres accessible (Neon, Supabase, local…).
+   - `DATABASE_URL` — un Postgres accessible. `DATABASE_URI` est également
+     accepté si vous préférez ce nom.
 2. `pnpm dev`, puis ouvrir `/admin` pour créer le premier utilisateur.
    Payload crée les tables au premier démarrage.
 3. `pnpm seed` injecte les sept parcours de démonstration dans la collection
    `adventures`.
 4. `pnpm generate:types` régénère `src/payload-types.ts`.
 
-Dès que `DATABASE_URI` et `PAYLOAD_SECRET` sont présents, `getAdventures()`
+Dès que la base et `PAYLOAD_SECRET` sont présents, `getAdventures()`
 lit la collection au lieu du fichier de démo. Si la base est injoignable, le
 site retombe sur le contenu de démonstration plutôt que de tomber en erreur.
 
-## Brancher R2
+## Médias
 
-Renseigner `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`,
-`R2_SECRET_ACCESS_KEY` et `R2_PUBLIC_URL`. Sans ces variables, le plugin de
-stockage reste inactif et les médias sont écrits sur le disque local.
+Les fichiers vont sur Vercel Blob, via `BLOB_READ_WRITE_TOKEN` (injecté
+automatiquement par le store Blob lié au projet). Sans ce jeton, le plugin
+reste inactif et les fichiers sont écrits sur le disque local — ce qui ne vaut
+qu'en développement, le système de fichiers étant en lecture seule sur Vercel.
 
 ## Organisation
 

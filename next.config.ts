@@ -3,10 +3,10 @@ import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   images: {
-    // Les médias sont servis depuis le domaine public du bucket R2.
-    remotePatterns: process.env.R2_PUBLIC_URL
-      ? [new URL(`${process.env.R2_PUBLIC_URL}/**`)]
-      : [],
+    // Les médias sont servis depuis le store Vercel Blob.
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
   },
 }
 

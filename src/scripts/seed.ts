@@ -1,7 +1,8 @@
 import { getPayload } from "payload"
-import config from "@payload-config"
+import config from "../payload.config"
 
 import { ADVENTURES } from "../lib/adventures"
+import type { Adventure as AdventureDoc } from "../payload-types"
 
 /**
  * Injecte le contenu de démonstration dans Payload.
@@ -19,15 +20,17 @@ const seed = async () => {
 
     const data = {
       slug: adventure.slug,
-      spotId: adventure.spotId,
-      regionCode: adventure.regionCode,
+      // Ces trois champs sont des « select » côté Payload : leur type est la
+      // liste d'options de la collection, plus étroite que le string du domaine.
+      spotId: adventure.spotId as AdventureDoc["spotId"],
+      regionCode: adventure.regionCode as AdventureDoc["regionCode"],
       title: adventure.title,
       tagline: adventure.tagline,
       ordre: (index + 1) * 10,
       commune: adventure.commune,
       departement: adventure.departement,
       intro: adventure.intro,
-      difficulty: String(adventure.difficulty),
+      difficulty: String(adventure.difficulty) as AdventureDoc["difficulty"],
       niveau: adventure.niveau,
       distanceKm: adventure.stats.distanceKm,
       randoKm: adventure.stats.randoKm,
