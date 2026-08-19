@@ -148,7 +148,13 @@ export interface Adventure {
     | 'vire-souleuvre';
   distanceKm: number;
   deniveleM: number;
+  /**
+   * Obligatoire : tout parcours comporte une partie à pied.
+   */
   randoKm: number;
+  /**
+   * Obligatoire : tout parcours comporte une partie sur l'eau.
+   */
   canoeKm: number;
   dureeH: number;
   jours: number;

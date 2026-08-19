@@ -99,11 +99,27 @@ export const Adventures: CollectionConfig = {
                 { name: "deniveleM", type: "number", required: true, label: "Dénivelé positif (m)" },
               ],
             },
+            // Un pack aventure associe toujours les deux disciplines : aucune
+            // des deux distances ne peut être nulle.
             {
               type: "row",
               fields: [
-                { name: "randoKm", type: "number", required: true, label: "Dont randonnée (km)" },
-                { name: "canoeKm", type: "number", required: true, label: "Dont canoë (km)" },
+                {
+                  name: "randoKm",
+                  type: "number",
+                  required: true,
+                  min: 0.1,
+                  label: "Dont randonnée (km)",
+                  admin: { description: "Obligatoire : tout parcours comporte une partie à pied." },
+                },
+                {
+                  name: "canoeKm",
+                  type: "number",
+                  required: true,
+                  min: 0.1,
+                  label: "Dont canoë (km)",
+                  admin: { description: "Obligatoire : tout parcours comporte une partie sur l'eau." },
+                },
               ],
             },
             {

@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react"
 
 import { AdventureCard } from "@/components/adventures/adventure-card"
 import { Container, Eyebrow, Section } from "@/components/site/section"
-import { ElevationProfile } from "@/components/site/elevation-profile"
+import { DayProfile } from "@/components/site/day-profile"
 import { getAdventures } from "@/lib/content"
 import { cn } from "@/lib/utils"
 
@@ -25,39 +25,67 @@ const PRINCIPE = [
   },
 ]
 
-function chiffres(total: number) {
+function reperes(prixMini: number) {
   return [
-    { value: String(total).padStart(2, "0"), label: "Parcours" },
-    { value: "01", label: "Région" },
-    { value: "05", label: "Niveaux" },
-    { value: "2019", label: "Depuis" },
+    { value: "Avril → Octobre", label: "Saison" },
+    { value: "12 personnes", label: "Groupe maximum" },
+    { value: `${prixMini} €`, label: "À partir de" },
+    { value: "8 ans", label: "Âge minimum" },
   ]
 }
 
 export default async function HomePage() {
   const adventures = await getAdventures()
   const featured = adventures.slice(0, 3)
-  const CHIFFRES = chiffres(adventures.length)
+  const REPERES = reperes(Math.min(...adventures.map((a) => a.prix)))
 
   return (
     <>
       {/* ------------------------------ Hero ------------------------------ */}
+      {/* Marginalia de feuille de carte : ce que porte le bord d'une carte
+          pliée — zone couverte, contenu, édition. */}
+      <div className="border-b border-border">
+        <Container className="flex items-center justify-between gap-4 py-3">
+          <span className="label text-muted-foreground">Normandie</span>
+          <span className="hidden label text-muted-foreground sm:inline">
+            Randonnée + canoë
+          </span>
+          <span className="label text-muted-foreground">Depuis 2019</span>
+        </Container>
+      </div>
+
       <Section bordered={false}>
-        <Container className="grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.05fr_minmax(0,0.95fr)] lg:items-end lg:gap-16 lg:py-28">
-          <div>
-            <Eyebrow>Normandie — Randonnée &amp; canoë</Eyebrow>
-            <h1 className="mt-8 text-[3.25rem] leading-[0.94] sm:text-7xl lg:text-[5.5rem]">
-              Marcher le matin.
-              <br />
-              Pagayer l&apos;après-midi.
-            </h1>
-            <p className="mt-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Traversia conçoit des packs aventure qui associent une randonnée et
-              une descente en canoë sur un même territoire, dans la même journée.
-              Le paysage se traverse deux fois : par le haut, puis par l&apos;eau.
+        <Container className="grid gap-12 pt-14 pb-16 sm:pt-20 lg:grid-cols-[1.35fr_minmax(0,1fr)] lg:items-end lg:gap-16 lg:pt-24">
+          {/* Le titre est construit comme une entrée de légende :
+              le geste, un filet, le moment de la journée. */}
+          <h1 className="text-[2.5rem] leading-[1.06] sm:text-6xl lg:text-[5rem]">
+            <span className="sr-only">
+              Marcher le matin, pagayer l&apos;après-midi.
+            </span>
+            <span aria-hidden className="flex flex-col gap-2 sm:gap-3">
+              {[
+                { verb: "Marcher", moment: "le matin" },
+                { verb: "Pagayer", moment: "l'après-midi" },
+              ].map((line) => (
+                <span key={line.verb} className="flex items-baseline gap-3 sm:gap-5">
+                  <span className="uppercase tracking-[0.04em]">{line.verb}</span>
+                  <span className="h-px min-w-4 flex-1 translate-y-[-0.28em] bg-border" />
+                  <span className="whitespace-nowrap text-[0.6em] italic text-muted-foreground">
+                    {line.moment}
+                  </span>
+                </span>
+              ))}
+            </span>
+          </h1>
+
+          <div className="lg:pb-3">
+            <p className="max-w-md text-base leading-relaxed text-muted-foreground">
+              Traversia trace des itinéraires qui associent une randonnée et une
+              descente en canoë sur un même territoire, dans la même journée. Le
+              paysage se traverse deux fois : par le haut, puis par l&apos;eau.
             </p>
 
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/aventures"
                 className="group inline-flex items-center justify-center gap-3 border border-foreground bg-foreground px-6 py-4 label text-background transition-colors hover:bg-background hover:text-foreground"
@@ -73,40 +101,31 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
-
-          {/* Cartouche altimétrique : la promesse, en une image. */}
-          <figure className="border border-border">
-            <figcaption className="flex items-center justify-between border-b border-border px-4 py-3">
-              <span className="label text-muted-foreground">Profil type</span>
-              <span className="label text-muted-foreground tabular-nums">
-                21 km — 480 m D+
-              </span>
-            </figcaption>
-            <div className="px-4 pt-6">
-              <ElevationProfile className="h-40 sm:h-52" />
-            </div>
-            <div className="grid grid-cols-2 border-t border-border">
-              <div className="border-r border-border px-4 py-3">
-                <p className="label-sm text-muted-foreground">0 → 12,5 km</p>
-                <p className="mt-2 font-mono text-xs uppercase tracking-widest">
-                  Randonnée
-                </p>
-              </div>
-              <div className="px-4 py-3">
-                <p className="label-sm text-muted-foreground">12,5 → 21 km</p>
-                <p className="mt-2 font-mono text-xs uppercase tracking-widest">
-                  Canoë
-                </p>
-              </div>
-            </div>
-          </figure>
         </Container>
+
+        {/* Signature : une journée entière, lue comme un profil de carte.
+            Hachures obliques pour le relief, horizontales pour l'eau. */}
+        <figure className="border-t border-border">
+          <Container className="flex items-baseline justify-between gap-4 py-3">
+            <figcaption className="label text-muted-foreground">
+              Profil d&apos;une journée
+            </figcaption>
+            <span className="label text-muted-foreground tabular-nums">
+              21 km — 480 m D+
+            </span>
+          </Container>
+          <div className="border-t border-border">
+            <Container className="py-8 sm:py-10">
+              <DayProfile />
+            </Container>
+          </div>
+        </figure>
       </Section>
 
-      {/* ---------------------------- Chiffres ---------------------------- */}
+      {/* ---------------------------- Repères ----------------------------- */}
       <Section>
         <dl className="grid grid-cols-2 md:grid-cols-4">
-          {CHIFFRES.map((item, i) => (
+          {REPERES.map((item, i) => (
             <div
               key={item.label}
               className={cn(
@@ -116,12 +135,9 @@ export default async function HomePage() {
                 i < 2 && "border-b border-border md:border-b-0",
               )}
             >
-              <dt className="sr-only">{item.label}</dt>
-              <dd>
-                <p className="font-display text-4xl tabular-nums sm:text-5xl">
-                  {item.value}
-                </p>
-                <p className="mt-3 label-sm text-muted-foreground">{item.label}</p>
+              <dt className="label-sm text-muted-foreground">{item.label}</dt>
+              <dd className="mt-3 font-display text-2xl leading-tight sm:text-3xl">
+                {item.value}
               </dd>
             </div>
           ))}
