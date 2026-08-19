@@ -102,12 +102,10 @@ function Plate({ variant, className }: { variant: Variant; className?: string })
         <path
           d={`${trail} L${splitX},${base} L0,${base} Z`}
           fill={`url(#relief-${variant})`}
-          className="profile-fill"
         />
         <path
           d={`${river} L${w},${base} L${splitX},${base} Z`}
           fill={`url(#eau-${variant})`}
-          className="profile-fill"
         />
       </g>
 
@@ -115,7 +113,7 @@ function Plate({ variant, className }: { variant: Variant; className?: string })
       <path
         d={`${trail} ${river.replace(/^M/, "L")}`}
         fill="none"
-        className="stroke-foreground profile-trace"
+        className="stroke-foreground"
         strokeWidth="1.75"
         strokeLinejoin="round"
       />

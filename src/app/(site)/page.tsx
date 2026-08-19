@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react"
 import { AdventureCard } from "@/components/adventures/adventure-card"
 import { Container, Eyebrow, Section } from "@/components/site/section"
 import { DayProfile } from "@/components/site/day-profile"
+import { OrnamentRule } from "@/components/site/ornament"
 import { getAdventures } from "@/lib/content"
 import { cn } from "@/lib/utils"
 
@@ -42,84 +43,77 @@ export default async function HomePage() {
   return (
     <>
       {/* ------------------------------ Hero ------------------------------ */}
-      {/* Marginalia de feuille de carte : ce que porte le bord d'une carte
-          pliée — zone couverte, contenu, édition. */}
-      <div className="border-b border-border">
-        <Container className="flex items-center justify-between gap-4 py-3">
-          <span className="label text-muted-foreground">Normandie</span>
-          <span className="hidden label text-muted-foreground sm:inline">
-            Randonnée + canoë
-          </span>
-          <span className="label text-muted-foreground">Depuis 2019</span>
-        </Container>
-      </div>
-
+      {/* Page de titre d'un guide ancien : composition symétrique, tailles
+          mêlées, filets à losange, encadrement à deux traits. */}
       <Section bordered={false}>
-        <Container className="grid gap-12 pt-14 pb-16 sm:pt-20 lg:grid-cols-[1.35fr_minmax(0,1fr)] lg:items-end lg:gap-16 lg:pt-24">
-          {/* Le titre est construit comme une entrée de légende :
-              le geste, un filet, le moment de la journée. */}
-          <h1 className="text-[2.5rem] leading-[1.06] sm:text-6xl lg:text-[5rem]">
-            <span className="sr-only">
-              Marcher le matin, pagayer l&apos;après-midi.
-            </span>
-            <span aria-hidden className="flex flex-col gap-2 sm:gap-3">
-              {[
-                { verb: "Marcher", moment: "le matin" },
-                { verb: "Pagayer", moment: "l'après-midi" },
-              ].map((line) => (
-                <span key={line.verb} className="flex items-baseline gap-3 sm:gap-5">
-                  <span className="uppercase tracking-[0.04em]">{line.verb}</span>
-                  <span className="h-px min-w-4 flex-1 translate-y-[-0.28em] bg-border" />
-                  <span className="whitespace-nowrap text-[0.6em] italic text-muted-foreground">
-                    {line.moment}
-                  </span>
-                </span>
-              ))}
-            </span>
-          </h1>
+        <Container className="py-14 sm:py-20 lg:py-24">
+          <div className="mx-auto max-w-3xl border border-foreground p-2">
+            <div className="border border-foreground px-5 py-12 text-center sm:px-12 sm:py-16 lg:py-20">
+              <OrnamentRule className="mx-auto max-w-[15rem]" />
+              <p className="mt-6 font-display text-base uppercase leading-none tracking-[0.28em] sm:text-lg sm:tracking-[0.42em]">
+                Randonnée &amp; canoë
+              </p>
+              <OrnamentRule className="mx-auto mt-6 max-w-[15rem]" />
 
-          <div className="lg:pb-3">
-            <p className="max-w-md text-base leading-relaxed text-muted-foreground">
-              Traversia trace des itinéraires qui associent une randonnée et une
-              descente en canoë sur un même territoire, dans la même journée. Le
-              paysage se traverse deux fois : par le haut, puis par l&apos;eau.
-            </p>
+              <p className="mt-9 label text-muted-foreground">
+                Sept itinéraires normands
+              </p>
 
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/aventures"
-                className="group inline-flex items-center justify-center gap-3 border border-foreground bg-foreground px-6 py-4 label text-background transition-colors hover:bg-background hover:text-foreground"
-              >
-                Voir la carte des parcours
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href="/entreprise"
-                className="inline-flex items-center justify-center border border-border px-6 py-4 label text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
-              >
-                Qui sommes-nous
-              </Link>
+              <h1 className="mt-7 text-[1.95rem] leading-[1.1] sm:text-5xl lg:text-[4.25rem] lg:leading-[1.04]">
+                Marcher le matin,
+                <br />
+                <span className="italic">pagayer l&apos;après-midi.</span>
+              </h1>
+
+              <OrnamentRule weight="triple" className="mx-auto mt-9 max-w-sm" />
+
+              <p className="mx-auto mt-8 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+                Chaque parcours associe une randonnée et une descente en canoë sur
+                un même territoire, dans la même journée. Le paysage se traverse
+                deux fois : par le haut, puis par l&apos;eau.
+              </p>
+
+              <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href="/aventures"
+                  className="group inline-flex items-center justify-center gap-3 border border-foreground bg-foreground px-6 py-4 label text-background transition-colors hover:bg-background hover:text-foreground"
+                >
+                  Voir la carte des parcours
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+                <Link
+                  href="/entreprise"
+                  className="inline-flex items-center justify-center border border-border px-6 py-4 label text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+                >
+                  Qui sommes-nous
+                </Link>
+              </div>
+
+              {/* Achevé d'imprimer. */}
+              <p className="mt-12 label-sm text-muted-foreground">
+                <span className="block sm:inline">Traversia · Clécy, Calvados</span>
+                <span className="hidden sm:inline"> · </span>
+                <span className="mt-2 block sm:mt-0 sm:inline">Édition 2026</span>
+              </p>
             </div>
           </div>
         </Container>
+      </Section>
 
-        {/* Signature : une journée entière, lue comme un profil de carte.
-            Hachures obliques pour le relief, horizontales pour l'eau. */}
-        <figure className="border-t border-border">
-          <Container className="flex items-baseline justify-between gap-4 py-3">
-            <figcaption className="label text-muted-foreground">
-              Profil d&apos;une journée
-            </figcaption>
-            <span className="label text-muted-foreground tabular-nums">
-              21 km — 480 m D+
-            </span>
+      {/* Planche dépliante : une journée entière, lue comme un profil de carte.
+          Hachures obliques pour le relief, horizontales pour l'eau. */}
+      <Section>
+        <Container className="flex items-baseline justify-between gap-4 py-3">
+          <p className="label text-muted-foreground">
+            Planche I — Profil d&apos;une journée
+          </p>
+          <p className="label text-muted-foreground tabular-nums">21 km — 480 m D+</p>
+        </Container>
+        <div className="border-t border-border">
+          <Container className="py-8 sm:py-10">
+            <DayProfile />
           </Container>
-          <div className="border-t border-border">
-            <Container className="py-8 sm:py-10">
-              <DayProfile />
-            </Container>
-          </div>
-        </figure>
+        </div>
       </Section>
 
       {/* ---------------------------- Repères ----------------------------- */}
