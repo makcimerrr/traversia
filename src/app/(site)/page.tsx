@@ -3,8 +3,7 @@ import { ArrowRight } from "lucide-react"
 
 import { AdventureCard } from "@/components/adventures/adventure-card"
 import { Container, Eyebrow, Section } from "@/components/site/section"
-import { DayProfile } from "@/components/site/day-profile"
-import { OrnamentRule } from "@/components/site/ornament"
+import { ElevationProfile } from "@/components/site/elevation-profile"
 import { getAdventures } from "@/lib/content"
 import { cn } from "@/lib/utils"
 
@@ -43,77 +42,65 @@ export default async function HomePage() {
   return (
     <>
       {/* ------------------------------ Hero ------------------------------ */}
-      {/* Page de titre d'un guide ancien : composition symétrique, tailles
-          mêlées, filets à losange, encadrement à deux traits. */}
       <Section bordered={false}>
-        <Container className="py-14 sm:py-20 lg:py-24">
-          <div className="mx-auto max-w-3xl border border-foreground p-2">
-            <div className="border border-foreground px-5 py-12 text-center sm:px-12 sm:py-16 lg:py-20">
-              <OrnamentRule className="mx-auto max-w-[15rem]" />
-              <p className="mt-6 font-display text-base uppercase leading-none tracking-[0.28em] sm:text-lg sm:tracking-[0.42em]">
-                Randonnée &amp; canoë
-              </p>
-              <OrnamentRule className="mx-auto mt-6 max-w-[15rem]" />
+        <Container className="grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.05fr_minmax(0,0.95fr)] lg:items-end lg:gap-16 lg:py-28">
+          <div>
+            <Eyebrow>Normandie — Randonnée &amp; canoë</Eyebrow>
+            <h1 className="mt-8 text-[3.25rem] leading-[0.94] sm:text-7xl lg:text-[5.5rem]">
+              Marcher le matin.
+              <br />
+              Pagayer l&apos;après-midi.
+            </h1>
+            <p className="mt-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Traversia conçoit des packs aventure qui associent une randonnée et
+              une descente en canoë sur un même territoire, dans la même journée.
+              Le paysage se traverse deux fois : par le haut, puis par l&apos;eau.
+            </p>
 
-              <p className="mt-9 label text-muted-foreground">
-                Sept itinéraires normands
-              </p>
-
-              <h1 className="mt-7 text-[1.95rem] leading-[1.1] sm:text-5xl lg:text-[4.25rem] lg:leading-[1.04]">
-                Marcher le matin,
-                <br />
-                <span className="italic">pagayer l&apos;après-midi.</span>
-              </h1>
-
-              <OrnamentRule weight="triple" className="mx-auto mt-9 max-w-sm" />
-
-              <p className="mx-auto mt-8 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Chaque parcours associe une randonnée et une descente en canoë sur
-                un même territoire, dans la même journée. Le paysage se traverse
-                deux fois : par le haut, puis par l&apos;eau.
-              </p>
-
-              <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-                <Link
-                  href="/aventures"
-                  className="group inline-flex items-center justify-center gap-3 border border-foreground bg-foreground px-6 py-4 label text-background transition-colors hover:bg-background hover:text-foreground"
-                >
-                  Voir la carte des parcours
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <Link
-                  href="/entreprise"
-                  className="inline-flex items-center justify-center border border-border px-6 py-4 label text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
-                >
-                  Qui sommes-nous
-                </Link>
-              </div>
-
-              {/* Achevé d'imprimer. */}
-              <p className="mt-12 label-sm text-muted-foreground">
-                <span className="block sm:inline">Traversia · Clécy, Calvados</span>
-                <span className="hidden sm:inline"> · </span>
-                <span className="mt-2 block sm:mt-0 sm:inline">Édition 2026</span>
-              </p>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link
+                href="/aventures"
+                className="group inline-flex items-center justify-center gap-3 border border-foreground bg-foreground px-6 py-4 label text-background transition-colors hover:bg-background hover:text-foreground"
+              >
+                Voir la carte des parcours
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <Link
+                href="/entreprise"
+                className="inline-flex items-center justify-center border border-border px-6 py-4 label text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+              >
+                Qui sommes-nous
+              </Link>
             </div>
           </div>
-        </Container>
-      </Section>
 
-      {/* Planche dépliante : une journée entière, lue comme un profil de carte.
-          Hachures obliques pour le relief, horizontales pour l'eau. */}
-      <Section>
-        <Container className="flex items-baseline justify-between gap-4 py-3">
-          <p className="label text-muted-foreground">
-            Planche I — Profil d&apos;une journée
-          </p>
-          <p className="label text-muted-foreground tabular-nums">21 km — 480 m D+</p>
+          {/* Cartouche altimétrique : la promesse, en une image. */}
+          <figure className="border border-border">
+            <figcaption className="flex items-center justify-between border-b border-border px-4 py-3">
+              <span className="label text-muted-foreground">Profil type</span>
+              <span className="label text-muted-foreground tabular-nums">
+                21 km — 480 m D+
+              </span>
+            </figcaption>
+            <div className="px-4 pt-6">
+              <ElevationProfile className="h-40 sm:h-52" />
+            </div>
+            <div className="grid grid-cols-2 border-t border-border">
+              <div className="border-r border-border px-4 py-3">
+                <p className="label-sm text-muted-foreground">0 → 12,5 km</p>
+                <p className="mt-2 font-mono text-xs uppercase tracking-widest">
+                  Randonnée
+                </p>
+              </div>
+              <div className="px-4 py-3">
+                <p className="label-sm text-muted-foreground">12,5 → 21 km</p>
+                <p className="mt-2 font-mono text-xs uppercase tracking-widest">
+                  Canoë
+                </p>
+              </div>
+            </div>
+          </figure>
         </Container>
-        <div className="border-t border-border">
-          <Container className="py-8 sm:py-10">
-            <DayProfile />
-          </Container>
-        </div>
       </Section>
 
       {/* ---------------------------- Repères ----------------------------- */}
