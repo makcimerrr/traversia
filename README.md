@@ -192,3 +192,9 @@ séparé pour garder une taille constante, et grossissent sur petit écran via
 
 Pour ajouter un point de départ, ajouter ses coordonnées à `SPOT_XY` puis son
 identifiant à la liste `spotId` de `src/collections/Adventures.ts`.
+
+Au niveau d'un parcours (clic sur un numéro, et sur la fiche aventure), un
+fond de carte réel prend le relais : tuiles CARTO (données OpenStreetMap)
+passées en monochrome via Leaflet, centrées sur le point de rendez-vous de
+la fiche (latitude / longitude). Le tracé dessiné reste schématique
+(`src/lib/trace.ts`) tant que les traces GPX ne sont pas projetées.

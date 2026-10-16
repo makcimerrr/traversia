@@ -226,3 +226,31 @@ export function placeSteps(
     return { at: pointAlong(trace.canoe, (index - split) / (last - split)), ...step, index }
   })
 }
+
+export type LatLng = [number, number]
+
+/**
+ * Le même tracé en coordonnées géographiques, pour le fond de carte réel.
+ * Les points sont relatifs au point de départ (SPOT_XY), converti en km
+ * puis en degrés autour du point de rendez-vous.
+ */
+export function traceToGeo(
+  trace: Trace,
+  origin: { lat: number; lng: number },
+  spotId: string,
+): { hike: LatLng[]; canoe: LatLng[]; river: LatLng[]; bascule: LatLng; toGeo: (p: Point) => LatLng } {
+  const [sx, sy] = SPOT_XY[spotId] ?? trace.hike[0]
+  const kmPerDegLat = 110.574
+  const kmPerDegLng = 111.32 * Math.cos((origin.lat * Math.PI) / 180)
+  const toGeo = ([x, y]: Point): LatLng => [
+    origin.lat - (y - sy) / UNITS_PER_KM / kmPerDegLat,
+    origin.lng + (x - sx) / UNITS_PER_KM / kmPerDegLng,
+  ]
+  return {
+    hike: trace.hike.map(toGeo),
+    canoe: trace.canoe.map(toGeo),
+    river: trace.river.map(toGeo),
+    bascule: toGeo(trace.bascule),
+    toGeo,
+  }
+}
