@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react"
 import { AdventureCard } from "@/components/adventures/adventure-card"
 import { Container, Eyebrow, Section } from "@/components/site/section"
 import { ElevationProfile } from "@/components/site/elevation-profile"
-import { getAdventures } from "@/lib/content"
+import { getAdventures, getSettings } from "@/lib/content"
 import { cn } from "@/lib/utils"
 
 const PRINCIPE = [
@@ -35,8 +35,9 @@ function reperes(prixMini: number) {
 }
 
 export default async function HomePage() {
-  const adventures = await getAdventures()
+  const [adventures, settings] = await Promise.all([getAdventures(), getSettings()])
   const featured = adventures.slice(0, 3)
+  const [accueilTitre, ...accueilSuite] = settings.messageAccueil.split(". ").filter(Boolean)
   const REPERES = reperes(Math.min(...adventures.map((a) => a.prix)))
 
   return (
@@ -66,10 +67,10 @@ export default async function HomePage() {
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
-                href="/entreprise"
+                href="/concept"
                 className="inline-flex items-center justify-center border border-border px-6 py-4 label text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
               >
-                Qui sommes-nous
+                Le concept
               </Link>
             </div>
           </div>
@@ -195,13 +196,21 @@ export default async function HomePage() {
       <Section>
         <Container className="grid gap-8 py-16 sm:py-20 lg:grid-cols-[1.2fr_minmax(0,1fr)] lg:items-center">
           <h2 className="max-w-2xl text-4xl leading-[1.02] sm:text-5xl">
-            Le calendrier 2027 ouvre en février.
-            <span className="text-muted-foreground"> Les groupes sont limités à douze.</span>
+            {accueilTitre ? `${accueilTitre.replace(/\.$/, "")}.` : "Le calendrier est ouvert."}
+            {accueilSuite.length > 0 && (
+              <span className="text-muted-foreground"> {accueilSuite.join(". ")}</span>
+            )}
           </h2>
           <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
             <Link
-              href="/contact"
+              href="/aventures"
               className="inline-flex items-center justify-center gap-3 border border-foreground bg-foreground px-6 py-4 label text-background transition-colors hover:bg-background hover:text-foreground"
+            >
+              Réserver une date
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center justify-center border border-border px-6 py-4 label text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
             >
               Nous écrire
             </Link>

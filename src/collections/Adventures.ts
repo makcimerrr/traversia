@@ -1,17 +1,28 @@
 import type { CollectionConfig } from "payload"
 
+import { revalidateHooks } from "../lib/revalidate"
+
+const labelList = (name: string, label: string, description?: string) => ({
+  name,
+  type: "array" as const,
+  label,
+  labels: { singular: "Élément", plural: "Éléments" },
+  admin: description ? { description } : undefined,
+  fields: [{ name: "label", type: "text" as const, required: true, label: "Intitulé" }],
+})
+
 /**
- * Un « pack aventure » : le contenu éditorial d'un parcours.
- * La forme suit exactement le type `Adventure` de src/lib/types.ts,
- * pour que le front puisse basculer de la donnée de démo à Payload
- * sans changer de composants.
+ * Un « pack aventure » : l'itinéraire, son récit, ses mesures, ses tarifs.
+ * Les dates se gèrent dans la collection Créneaux, les partenaires dans
+ * Partenaires ; cette fiche décrit le parcours, pas son exploitation.
  */
 export const Adventures: CollectionConfig = {
   slug: "adventures",
+  hooks: revalidateHooks,
   admin: {
     group: "Contenu",
     useAsTitle: "title",
-    defaultColumns: ["title", "commune", "difficulty", "prix"],
+    defaultColumns: ["title", "commune", "region", "difficulty", "prix", "actif"],
   },
   labels: { singular: "Aventure", plural: "Aventures" },
   access: { read: () => true },
@@ -40,11 +51,19 @@ export const Adventures: CollectionConfig = {
       admin: { description: "Une ligne, affichée sur la carte-fiche." },
     },
     {
+      name: "actif",
+      type: "checkbox",
+      defaultValue: true,
+      label: "Visible sur le site",
+      admin: { position: "sidebar" },
+    },
+    {
       name: "ordre",
       type: "number",
       required: true,
       defaultValue: 100,
       label: "Ordre d'affichage",
+      admin: { position: "sidebar" },
     },
 
     {
@@ -61,12 +80,23 @@ export const Adventures: CollectionConfig = {
               ],
             },
             {
-              name: "regionCode",
-              type: "select",
-              required: true,
-              defaultValue: "28",
-              label: "Région",
-              options: [{ label: "Normandie", value: "28" }],
+              type: "row",
+              fields: [
+                {
+                  name: "region",
+                  type: "relationship",
+                  relationTo: "regions",
+                  required: true,
+                  label: "Région",
+                },
+                {
+                  name: "partner",
+                  type: "relationship",
+                  relationTo: "partners",
+                  label: "Partenaire référent",
+                  admin: { description: "Proposé par défaut à la création d'un créneau." },
+                },
+              ],
             },
             {
               name: "spotId",
@@ -74,8 +104,7 @@ export const Adventures: CollectionConfig = {
               required: true,
               label: "Point de départ sur la carte",
               admin: {
-                description:
-                  "Correspond à une clé de SPOT_XY dans src/lib/france-map.ts.",
+                description: "Correspond à une clé de SPOT_XY dans src/lib/france-map.ts.",
               },
               options: [
                 { label: "Clécy — Suisse Normande", value: "clecy-suisse-normande" },
@@ -85,6 +114,23 @@ export const Adventures: CollectionConfig = {
                 { label: "Genêts — Baie du Mont", value: "baie-mont-saint-michel" },
                 { label: "Acquigny — Vallée de l'Eure", value: "vallee-de-leure" },
                 { label: "Vire — Souleuvre", value: "vire-souleuvre" },
+              ],
+            },
+            {
+              name: "rendezVous",
+              type: "group",
+              label: "Point de rendez-vous",
+              fields: [
+                { name: "lieu", type: "text", label: "Lieu", admin: { description: "Ex. Parking de la base nautique." } },
+                { name: "adresse", type: "text", label: "Adresse" },
+                {
+                  type: "row",
+                  fields: [
+                    { name: "lat", type: "number", label: "Latitude", admin: { width: "33%" } },
+                    { name: "lng", type: "number", label: "Longitude", admin: { width: "33%" } },
+                    { name: "heure", type: "text", label: "Heure d'accueil", admin: { width: "33%" } },
+                  ],
+                },
               ],
             },
           ],
@@ -125,29 +171,83 @@ export const Adventures: CollectionConfig = {
             {
               type: "row",
               fields: [
+                { name: "tempsRandoH", type: "number", label: "Temps de randonnée (h)" },
+                { name: "tempsCanoeH", type: "number", label: "Temps de canoë (h)" },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
                 { name: "dureeH", type: "number", required: true, label: "Durée sur le terrain (h)" },
                 { name: "jours", type: "number", required: true, defaultValue: 1, label: "Nombre de jours" },
               ],
             },
             {
-              name: "difficulty",
-              type: "select",
-              required: true,
-              label: "Difficulté",
-              options: [
-                { label: "1 — Découverte", value: "1" },
-                { label: "2 — Facile", value: "2" },
-                { label: "3 — Soutenu", value: "3" },
-                { label: "4 — Sportif", value: "4" },
-                { label: "5 — Engagé", value: "5" },
+              type: "row",
+              fields: [
+                {
+                  name: "difficulty",
+                  type: "select",
+                  required: true,
+                  label: "Difficulté",
+                  options: [
+                    { label: "1 — Découverte", value: "1" },
+                    { label: "2 — Facile", value: "2" },
+                    { label: "3 — Soutenu", value: "3" },
+                    { label: "4 — Sportif", value: "4" },
+                    { label: "5 — Engagé", value: "5" },
+                  ],
+                },
+                { name: "ageMin", type: "number", defaultValue: 8, label: "Âge minimum" },
               ],
+            },
+            {
+              name: "niveauConseille",
+              type: "textarea",
+              label: "Niveau conseillé",
+              admin: { description: "Ex. Marcheur régulier, à l'aise dans l'eau. Aucune expérience de canoë requise." },
             },
             {
               type: "row",
               fields: [
                 { name: "saison", type: "text", required: true, label: "Saison" },
                 { name: "groupe", type: "text", required: true, label: "Taille du groupe" },
-                { name: "prix", type: "number", required: true, label: "Prix (€ / pers.)" },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Tarifs",
+          fields: [
+            {
+              type: "row",
+              fields: [
+                { name: "prix", type: "number", required: true, label: "Prix adulte (€ / pers.)" },
+                { name: "prixEnfant", type: "number", label: "Prix enfant (€ / pers.)" },
+                { name: "ageEnfantMax", type: "number", defaultValue: 12, label: "Tarif enfant jusqu'à (ans inclus)" },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "placesParDefaut",
+                  type: "number",
+                  defaultValue: 12,
+                  label: "Places par créneau (défaut)",
+                },
+                {
+                  name: "minParticipants",
+                  type: "number",
+                  defaultValue: 1,
+                  label: "Participants minimum par réservation",
+                },
+                {
+                  name: "maxParticipants",
+                  type: "number",
+                  defaultValue: 8,
+                  label: "Participants maximum par réservation",
+                },
               ],
             },
           ],
@@ -186,12 +286,24 @@ export const Adventures: CollectionConfig = {
                 { name: "detail", type: "textarea", required: true, label: "Détail" },
               ],
             },
+          ],
+        },
+        {
+          label: "Pratique",
+          fields: [
+            labelList("inclus", "Ce qui est compris"),
+            labelList("nonInclus", "Ce qui n'est pas compris"),
+            labelList("equipement", "Équipement conseillé", "Ce que le participant doit apporter."),
             {
-              name: "inclus",
+              name: "pratique",
               type: "array",
-              label: "Ce qui est compris",
-              labels: { singular: "Élément", plural: "Éléments" },
-              fields: [{ name: "label", type: "text", required: true, label: "Intitulé" }],
+              label: "Informations pratiques",
+              labels: { singular: "Information", plural: "Informations" },
+              admin: { description: "Parking, repas, météo, navette…" },
+              fields: [
+                { name: "label", type: "text", required: true, label: "Intitulé" },
+                { name: "detail", type: "textarea", required: true, label: "Détail" },
+              ],
             },
           ],
         },
@@ -211,6 +323,21 @@ export const Adventures: CollectionConfig = {
               hasMany: true,
               label: "Galerie",
             },
+            {
+              name: "gpx",
+              type: "upload",
+              relationTo: "media",
+              label: "Trace GPX",
+              admin: { description: "Envoyée au client après réservation." },
+            },
+          ],
+        },
+        {
+          label: "Liés",
+          fields: [
+            { name: "slots", type: "join", collection: "slots", on: "adventure", label: "Créneaux" },
+            { name: "faqs", type: "join", collection: "faqs", on: "adventures", label: "Questions fréquentes" },
+            { name: "reviews", type: "join", collection: "reviews", on: "adventure", label: "Avis" },
           ],
         },
       ],

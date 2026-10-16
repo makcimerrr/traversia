@@ -180,6 +180,38 @@
   .link-underline:hover {
     @apply decoration-foreground;
   }
+
+  /* Texte riche des pages éditoriales (Payload Lexical ou démo). */
+  .prose {
+    @apply max-w-2xl text-sm leading-relaxed text-muted-foreground;
+  }
+  .prose h2 {
+    @apply mt-12 text-2xl leading-tight text-foreground first:mt-0;
+  }
+  .prose h3 {
+    @apply mt-8 text-xl leading-tight text-foreground;
+  }
+  .prose p {
+    @apply mt-4;
+  }
+  .prose ul, .prose ol {
+    @apply mt-4 space-y-2 pl-5;
+  }
+  .prose ul {
+    @apply list-disc;
+  }
+  .prose ol {
+    @apply list-decimal;
+  }
+  .prose a {
+    @apply text-foreground underline decoration-1 underline-offset-4 decoration-muted-foreground/50 hover:decoration-foreground;
+  }
+  .prose strong {
+    @apply font-medium text-foreground;
+  }
+  .prose blockquote {
+    @apply mt-6 border-l border-foreground pl-5 font-display text-xl italic text-foreground;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

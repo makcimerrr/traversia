@@ -3,9 +3,10 @@
 Site vitrine des « packs aventure » — des itinéraires qui associent randonnée
 et canoë sur un même territoire, en Normandie.
 
-Le site sert pour l'instant de présentation : le contenu est figé dans le dépôt
-et le formulaire de contact n'envoie rien. La structure de données et le CMS
-sont en revanche déjà en place pour prendre le relais.
+Le site est en cours de transformation en plateforme de réservation. Le
+contenu (aventures, régions, partenaires, créneaux, FAQ, avis, pages légales,
+paramètres) est géré dans Payload ; sans base configurée, des données de
+démonstration prennent le relais pour que tout fonctionne hors ligne.
 
 ## Stack
 
@@ -39,9 +40,22 @@ variables réelles (base Neon, jeton Blob, secret Payload).
      accepté si vous préférez ce nom.
 2. `pnpm dev`, puis ouvrir `/admin` pour créer le premier utilisateur.
    Payload crée les tables au premier démarrage.
-3. `pnpm seed` injecte les sept parcours de démonstration dans la collection
-   `adventures`.
-4. `pnpm generate:types` régénère `src/payload-types.ts`.
+3. `pnpm seed` injecte le contenu de démonstration : régions, partenaires,
+   sept parcours, créneaux sur six mois, FAQ, avis, pages légales, paramètres.
+   Le script est idempotent ; il ne réécrit jamais un créneau ou une page
+   existants.
+4. `pnpm generate:types` régénère `src/payload-types.ts` après toute
+   modification d'une collection.
+
+### Schéma de base
+
+En développement, Payload pousse le schéma dans la base au démarrage
+(mode « push » de Drizzle). Quand une modification entraîne une perte de
+données (colonne supprimée, colonne obligatoire ajoutée sur une table
+remplie), Drizzle demande confirmation dans le terminal. Pour un script
+non interactif, `printf 'y\n' | PAYLOAD_FORCE_DRIZZLE_PUSH=true pnpm seed`
+accepte l'avertissement. En cas d'ambiguïté (« enum créé ou renommé ? »),
+supprimer d'abord la colonne obsolète en SQL.
 
 Dès que la base et `PAYLOAD_SECRET` sont présents, `getAdventures()`
 lit la collection au lieu du fichier de démo. Si la base est injoignable, le
@@ -59,17 +73,25 @@ qu'en développement, le système de fichiers étant en lecture seule sur Vercel
 ```
 src/
   app/
-    (site)/          Pages publiques — layout, accueil, aventures, entreprise, contact
+    (site)/          Pages publiques — accueil, aventures, concept, à propos,
+                     partenaires, FAQ, contact, pages éditoriales /[slug]
     (payload)/       Administration et API Payload (fichiers générés, à ne pas modifier)
-  collections/       Schémas Payload : Adventures, Media, Users
+  collections/       Schémas Payload : Adventures, Slots (créneaux), Regions,
+                     Partners, Faqs, Reviews, Pages, Messages, Media, Users
+  globals/           SiteSettings : coordonnées, informations légales
   components/
     adventures/      Fiche parcours, carrousel, jauge de difficulté, cartouche de mesures
     map/             Carte SVG France → Normandie
     site/            En-tête, pied de page, profil altimétrique, primitives de section
     ui/              Composants shadcn/ui
   lib/
-    adventures.ts    Contenu de démonstration
+    adventures.ts    Aventures de démonstration
+    demo.ts          Régions, partenaires, créneaux, FAQ, avis, pages de démo
     content.ts       Point d'entrée unique du contenu (Payload ou démo)
+    payload.ts       Accès Payload partagé et bascule démo
+    revalidate.ts    Crochets d'invalidation du cache après édition admin
+    format.ts        Dates et prix en français
+    actions/         Server actions (formulaire de contact)
     france-map.ts    Tracés SVG générés — ne pas éditer à la main
     types.ts         Types du domaine
   scripts/seed.ts    Injection du contenu de démonstration dans Payload

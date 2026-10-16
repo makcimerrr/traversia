@@ -1,14 +1,41 @@
-import type { Adventure } from "./types"
+import type { Adventure, PracticalInfo, RendezVous } from "./types"
 
 /**
  * Contenu de démonstration. Même forme que ce que renvoie la collection
  * Payload `adventures` — voir src/lib/content.ts pour la bascule.
+ *
+ * Le récit de chaque parcours est dans BASE ; les informations pratiques,
+ * propres à chaque fiche, sont dans EXTRAS, et les valeurs communes dans
+ * COMMON. ADVENTURES, exporté en bas de fichier, assemble les trois.
  */
-export const ADVENTURES: Adventure[] = [
+type Base = Omit<
+  Adventure,
+  | "regionCode"
+  | "regionSlug"
+  | "regionName"
+  | "partnerSlug"
+  | "partnerName"
+  | "niveauConseille"
+  | "ageMin"
+  | "prixEnfant"
+  | "ageEnfantMax"
+  | "placesParDefaut"
+  | "minParticipants"
+  | "maxParticipants"
+  | "nonInclus"
+  | "equipement"
+  | "pratique"
+  | "rendezVous"
+  | "gallery"
+  | "stats"
+> & {
+  stats: Omit<Adventure["stats"], "tempsRandoH" | "tempsCanoeH">
+}
+
+const BASE: Base[] = [
   {
     slug: "suisse-normande",
     spotId: "clecy-suisse-normande",
-    regionCode: "28",
     title: "La Suisse Normande",
     tagline: "Les crêtes de Clécy le matin, l'Orne au fil de l'eau l'après-midi",
     commune: "Clécy",
@@ -38,7 +65,6 @@ export const ADVENTURES: Adventure[] = [
   {
     slug: "roche-d-oetre",
     spotId: "pont-douilly-oetre",
-    regionCode: "28",
     title: "La Roche d'Oëtre",
     tagline: "Le plus haut point de vue de l'Ouest, puis les gorges de la Rouvre",
     commune: "Pont-d'Ouilly",
@@ -68,7 +94,6 @@ export const ADVENTURES: Adventure[] = [
   {
     slug: "boucle-de-la-seine",
     spotId: "les-andelys-seine",
-    regionCode: "28",
     title: "La Boucle des Andelys",
     tagline: "Château Gaillard en surplomb, la Seine en contrebas",
     commune: "Les Andelys",
@@ -98,7 +123,6 @@ export const ADVENTURES: Adventure[] = [
   {
     slug: "cote-d-albatre",
     spotId: "etretat-albatre",
-    regionCode: "28",
     title: "La Côte d'Albâtre",
     tagline: "Les falaises d'Étretat par le GR21, la mer par en dessous",
     commune: "Étretat",
@@ -128,7 +152,6 @@ export const ADVENTURES: Adventure[] = [
   {
     slug: "baie-du-mont",
     spotId: "baie-mont-saint-michel",
-    regionCode: "28",
     title: "La Baie du Mont",
     tagline: "Traversée des grèves à pied, remontée du Couesnon à la pagaie",
     commune: "Genêts",
@@ -158,7 +181,6 @@ export const ADVENTURES: Adventure[] = [
   {
     slug: "vallee-de-l-eure",
     spotId: "vallee-de-leure",
-    regionCode: "28",
     title: "La Vallée de l'Eure",
     tagline: "Une première fois en douceur, à l'ombre des moulins",
     commune: "Acquigny",
@@ -188,7 +210,6 @@ export const ADVENTURES: Adventure[] = [
   {
     slug: "gorges-de-la-souleuvre",
     spotId: "vire-souleuvre",
-    regionCode: "28",
     title: "Les Gorges de la Souleuvre",
     tagline: "Deux jours, un bivouac, le bocage vu du fond des vallées",
     commune: "Vire Normandie",
@@ -217,6 +238,172 @@ export const ADVENTURES: Adventure[] = [
   },
 ]
 
-export function getAdventureBySlug(slug: string): Adventure | undefined {
-  return ADVENTURES.find((a) => a.slug === slug)
+type Extra = {
+  partnerSlug: string
+  partnerName: string
+  niveauConseille: string
+  ageMin: number
+  prixEnfant?: number
+  tempsRandoH: number
+  tempsCanoeH: number
+  nonInclus: string[]
+  equipement?: string[]
+  pratique: PracticalInfo[]
+  rendezVous: RendezVous
 }
+
+const EQUIPEMENT_COMMUN = [
+  "Chaussures de randonnée tenant la cheville",
+  "Tenue de rechange complète dans un sac",
+  "Gourde d'un litre et demi minimum",
+  "Protection solaire et casquette",
+  "Coupe-vent imperméable",
+]
+
+const NON_INCLUS_COMMUN = ["Transport jusqu'au point de rendez-vous", "Assurance annulation"]
+
+const EXTRAS: Record<string, Extra> = {
+  "suisse-normande": {
+    partnerSlug: "base-de-clecy",
+    partnerName: "Base nautique de Clécy",
+    niveauConseille:
+      "Marcheur régulier, capable d'enchaîner 12 km avec du dénivelé. Aucune expérience de canoë nécessaire : l'Orne est calme et l'initiation se fait sur berge.",
+    ageMin: 10,
+    prixEnfant: 69,
+    tempsRandoH: 3.5,
+    tempsCanoeH: 2.5,
+    nonInclus: [...NON_INCLUS_COMMUN, "Déjeuner (panier possible sur demande, 14 €)"],
+    pratique: [
+      { label: "Parking", detail: "Gratuit au bourg de Clécy, à 200 m du point de rendez-vous." },
+      { label: "Repas", detail: "Pique-nique à prévoir, ou panier normand à commander à la réservation." },
+      { label: "Météo", detail: "La sortie est maintenue sous la pluie, annulée en cas d'orage ou de crue. Décision la veille à 18 h." },
+      { label: "Navette", detail: "Un minibus ramène le groupe au point de départ en fin de journée." },
+    ],
+    rendezVous: { lieu: "Base nautique de Clécy", adresse: "Le Vey, 14570 Clécy", lat: 48.9145, lng: -0.4789, heure: "08h30" },
+  },
+  "roche-d-oetre": {
+    partnerSlug: "base-de-clecy",
+    partnerName: "Base nautique de Clécy",
+    niveauConseille:
+      "Sportif habitué à la marche en terrain accidenté et sans vertige : deux passages câblés sur le sentier des Corniches. Canoë accessible après briefing.",
+    ageMin: 14,
+    tempsRandoH: 4.5,
+    tempsCanoeH: 3,
+    nonInclus: [...NON_INCLUS_COMMUN, "Déjeuner"],
+    pratique: [
+      { label: "Parking", detail: "Parking de la Roche d'Oëtre, gratuit." },
+      { label: "Repas", detail: "Pique-nique à prévoir. Un encas est fourni à mi-parcours." },
+      { label: "Météo", detail: "Sortie annulée si la Rouvre dépasse 40 cm à l'échelle de Pont-d'Ouilly." },
+    ],
+    rendezVous: { lieu: "Parking de la Roche d'Oëtre", adresse: "Saint-Philbert-sur-Orne, 61430", lat: 48.8325, lng: -0.4367, heure: "08h00" },
+  },
+  "boucle-de-la-seine": {
+    partnerSlug: "seine-canoe-andelys",
+    partnerName: "Seine Canoë — Les Andelys",
+    niveauConseille:
+      "Tout public en bonne forme. La montée à Château Gaillard est courte, la Seine est plate. Bon premier parcours en famille.",
+    ageMin: 8,
+    prixEnfant: 55,
+    tempsRandoH: 2.5,
+    tempsCanoeH: 2.5,
+    nonInclus: [...NON_INCLUS_COMMUN, "Déjeuner", "Entrée du château (facultative, 4 €)"],
+    pratique: [
+      { label: "Parking", detail: "Parking du Petit Andely, le long de la Seine." },
+      { label: "Repas", detail: "Pique-nique à prévoir ; boulangerie et épicerie au Petit Andely." },
+      { label: "Navigation", detail: "La Seine est un fleuve navigué : on reste en rive, le guide signale les péniches." },
+    ],
+    rendezVous: { lieu: "Embarcadère du Petit Andely", adresse: "Quai Sadi Carnot, 27700 Les Andelys", lat: 49.2414, lng: 1.4083, heure: "09h00" },
+  },
+  "cote-d-albatre": {
+    partnerSlug: "kayak-cote-albatre",
+    partnerName: "Kayak Côte d'Albâtre",
+    niveauConseille:
+      "Sportif, à l'aise dans l'eau et capable de nager 50 m. Le kayak de mer demande un briefing complet, assuré par un guide diplômé mer.",
+    ageMin: 16,
+    tempsRandoH: 4,
+    tempsCanoeH: 3,
+    nonInclus: [...NON_INCLUS_COMMUN, "Déjeuner"],
+    equipement: [...EQUIPEMENT_COMMUN, "Maillot de bain et serviette", "Chaussures fermées acceptant l'eau"],
+    pratique: [
+      { label: "Marée", detail: "L'horaire exact dépend de la marée et vous est confirmé 48 h avant." },
+      { label: "Parking", detail: "Parking payant d'Étretat ; parking gratuit à 15 minutes à pied." },
+      { label: "Météo", detail: "Sortie annulée au-delà de force 4 ou si la houle dépasse 1 m. Remboursement intégral." },
+    ],
+    rendezVous: { lieu: "Plage d'Étretat, poste de secours", adresse: "Promenade de la plage, 76790 Étretat", lat: 49.7072, lng: 0.2017, heure: "08h30" },
+  },
+  "baie-du-mont": {
+    partnerSlug: "canoe-couesnon",
+    partnerName: "Canoë du Couesnon",
+    niveauConseille:
+      "Tout public capable de marcher 13 km sur sable, pieds nus ou en chaussons néoprène. Le canoë remonte avec le flot : aucun effort technique.",
+    ageMin: 8,
+    prixEnfant: 68,
+    tempsRandoH: 3.5,
+    tempsCanoeH: 2,
+    nonInclus: [...NON_INCLUS_COMMUN, "Déjeuner"],
+    equipement: ["Short ou pantalon retroussable", "Chaussons néoprène ou vieilles baskets", "Coupe-vent", "Gourde et pique-nique", "Protection solaire"],
+    pratique: [
+      { label: "Horaires", detail: "Ils dépendent du coefficient de marée et sont communiqués la veille à 18 h." },
+      { label: "Parking", detail: "Parking du Bec d'Andaine, gratuit." },
+      { label: "Sécurité", detail: "La traversée se fait uniquement avec un guide de baie agréé. Aucun écart au groupe n'est toléré." },
+    ],
+    rendezVous: { lieu: "Bec d'Andaine", adresse: "Route du Bec d'Andaine, 50530 Genêts", lat: 48.6797, lng: -1.5119, heure: "Selon marée" },
+  },
+  "vallee-de-l-eure": {
+    partnerSlug: "seine-canoe-andelys",
+    partnerName: "Seine Canoë — Les Andelys",
+    niveauConseille:
+      "Le parcours d'initiation : accessible dès 8 ans, sans aucune expérience. Idéal pour une première sortie en famille.",
+    ageMin: 8,
+    prixEnfant: 42,
+    tempsRandoH: 2,
+    tempsCanoeH: 2.5,
+    nonInclus: [...NON_INCLUS_COMMUN, "Déjeuner"],
+    pratique: [
+      { label: "Parking", detail: "Parking du château d'Acquigny, gratuit." },
+      { label: "Repas", detail: "Pique-nique à prévoir ; un goûter est offert à l'arrivée." },
+      { label: "Enfants", detail: "Les enfants embarquent avec un adulte en canoë triplace." },
+    ],
+    rendezVous: { lieu: "Parking du château", adresse: "1 rue Aristide Briand, 27400 Acquigny", lat: 49.1736, lng: 1.1772, heure: "09h30" },
+  },
+  "gorges-de-la-souleuvre": {
+    partnerSlug: "base-de-clecy",
+    partnerName: "Base nautique de Clécy",
+    niveauConseille:
+      "Randonneur confirmé, habitué à porter un sac de 8 kg sur une journée entière. Nuit sous tente. Expérience de canoë souhaitée.",
+    ageMin: 16,
+    tempsRandoH: 7,
+    tempsCanoeH: 6,
+    nonInclus: [...NON_INCLUS_COMMUN, "Déjeuners des deux jours", "Sac de couchage (location possible, 8 €)"],
+    equipement: [...EQUIPEMENT_COMMUN, "Sac à dos de 30 à 40 litres", "Sac de couchage", "Lampe frontale", "Deux pique-niques"],
+    pratique: [
+      { label: "Parking", detail: "Parking de la gare de Vire, gratuit ; la navette vous y ramène le deuxième jour." },
+      { label: "Bivouac", detail: "Tente, matelas et repas chaud du soir fournis. Pas de douche." },
+      { label: "Météo", detail: "Sortie reportée si une alerte orange est annoncée sur l'un des deux jours." },
+    ],
+    rendezVous: { lieu: "Gare de Vire", adresse: "Place de la Gare, 14500 Vire Normandie", lat: 48.8389, lng: -0.8889, heure: "08h00" },
+  },
+}
+
+const COMMON = {
+  regionCode: "28",
+  regionSlug: "normandie",
+  regionName: "Normandie",
+  ageEnfantMax: 12,
+  placesParDefaut: 12,
+  minParticipants: 1,
+  maxParticipants: 8,
+  gallery: [] as Adventure["gallery"],
+}
+
+export const ADVENTURES: Adventure[] = BASE.map((base) => {
+  const extra = EXTRAS[base.slug]
+  const { tempsRandoH, tempsCanoeH, ...rest } = extra
+  return {
+    ...base,
+    ...COMMON,
+    ...rest,
+    equipement: extra.equipement ?? EQUIPEMENT_COMMUN,
+    stats: { ...base.stats, tempsRandoH, tempsCanoeH },
+  }
+})

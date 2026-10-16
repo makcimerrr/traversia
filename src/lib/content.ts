@@ -1,91 +1,455 @@
 import "server-only"
 
+import type { Payload, Where } from "payload"
+
 import { ADVENTURES } from "./adventures"
-import type { Adventure, Difficulty } from "./types"
+import {
+  FAQS_DEMO,
+  PAGES_DEMO,
+  PARTNERS_DEMO,
+  REGIONS_DEMO,
+  REVIEWS_DEMO,
+  SETTINGS_DEMO,
+  slotsDemo,
+  toDateKey,
+} from "./demo"
+import { readOrDemo } from "./payload"
+import type {
+  Adventure as AdventureDoc,
+  Faq as FaqDoc,
+  Media as MediaDoc,
+  Page as PageDoc,
+  Partner as PartnerDoc,
+  Region as RegionDoc,
+  Review as ReviewDoc,
+  SiteSetting as SettingsDoc,
+  Slot as SlotDoc,
+} from "@/payload-types"
+import type {
+  Adventure,
+  Difficulty,
+  Faq,
+  MediaRef,
+  Page,
+  Partner,
+  Region,
+  Review,
+  SiteSettings,
+  Slot,
+} from "./types"
+import { DIFFICULTY_LABELS } from "./types"
 
 /**
  * Point d'entrée unique du contenu.
  *
- * Tant qu'aucune base n'est configurée (DATABASE_URI absent), le site sert
- * les données de démonstration : `pnpm dev` fonctionne sans rien installer.
- * Dès que Payload est branché, les mêmes pages lisent la collection
- * `adventures` sans qu'aucun composant ne change.
+ * Chaque lecteur interroge Payload quand une base est configurée, et sert
+ * sinon le contenu de démonstration (src/lib/adventures.ts, src/lib/demo.ts).
+ * Les composants ne voient jamais la différence.
  */
 
-const usePayload = Boolean(
-  (process.env.DATABASE_URI || process.env.DATABASE_URL) && process.env.PAYLOAD_SECRET,
-)
+// ----------------------------------------------------------------------------
+// Conversions Payload → domaine
+// ----------------------------------------------------------------------------
 
-type ArrayItem = { label?: string | null }
+type Labelled = { label?: string | null }
 
-/** Convertit un document Payload vers le type utilisé par les composants. */
-function toAdventure(doc: Record<string, unknown>): Adventure {
-  const list = (value: unknown): string[] =>
-    Array.isArray(value)
-      ? (value as ArrayItem[]).map((item) => item.label ?? "").filter(Boolean)
-      : []
+const labels = (value: Labelled[] | null | undefined): string[] =>
+  (value ?? []).map((item) => item.label ?? "").filter(Boolean)
 
-  const num = (value: unknown): number => Number(value ?? 0)
+const num = (value: number | null | undefined, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback
+
+/** Une relation peuplée (depth ≥ 1), ou rien si Payload n'a renvoyé que l'id. */
+function populated<T extends { id: number }>(value: number | T | null | undefined): T | undefined {
+  return value && typeof value === "object" ? value : undefined
+}
+
+function toMedia(value: number | MediaDoc | null | undefined): MediaRef | undefined {
+  const doc = populated(value)
+  if (!doc?.url) return undefined
+  return {
+    url: doc.url,
+    alt: doc.alt,
+    width: doc.width ?? undefined,
+    height: doc.height ?? undefined,
+    cardUrl: doc.sizes?.card?.url ?? undefined,
+  }
+}
+
+function toAdventure(doc: AdventureDoc): Adventure {
+  const region = populated(doc.region)
+  const partner = populated(doc.partner)
+  const difficulty = (Number(doc.difficulty) || 1) as Difficulty
 
   return {
-    slug: String(doc.slug),
-    spotId: String(doc.spotId),
-    regionCode: String(doc.regionCode ?? "28"),
-    title: String(doc.title),
-    tagline: String(doc.tagline ?? ""),
-    commune: String(doc.commune ?? ""),
-    departement: String(doc.departement ?? ""),
-    intro: String(doc.intro ?? ""),
-    difficulty: (Number(doc.difficulty) || 1) as Difficulty,
-    niveau: String(doc.niveau ?? ""),
+    slug: doc.slug,
+    spotId: doc.spotId,
+    regionCode: region?.code ?? "28",
+    regionSlug: region?.slug ?? "normandie",
+    regionName: region?.name ?? "Normandie",
+    partnerSlug: partner?.slug,
+    partnerName: partner?.name,
+    title: doc.title,
+    tagline: doc.tagline,
+    commune: doc.commune,
+    departement: doc.departement,
+    intro: doc.intro,
+    difficulty,
+    niveau: DIFFICULTY_LABELS[difficulty],
+    niveauConseille: doc.niveauConseille ?? "",
+    ageMin: num(doc.ageMin, 8),
     stats: {
       distanceKm: num(doc.distanceKm),
       randoKm: num(doc.randoKm),
       canoeKm: num(doc.canoeKm),
       deniveleM: num(doc.deniveleM),
       dureeH: num(doc.dureeH),
-      jours: num(doc.jours) || 1,
+      jours: num(doc.jours, 1),
+      tempsRandoH: num(doc.tempsRandoH),
+      tempsCanoeH: num(doc.tempsCanoeH),
     },
-    saison: String(doc.saison ?? ""),
-    groupe: String(doc.groupe ?? ""),
+    saison: doc.saison,
+    groupe: doc.groupe,
     prix: num(doc.prix),
-    temps_forts: list(doc.temps_forts),
-    programme: Array.isArray(doc.programme)
-      ? (doc.programme as Record<string, unknown>[]).map((step) => ({
-          time: String(step.time ?? ""),
-          title: String(step.title ?? ""),
-          detail: String(step.detail ?? ""),
-        }))
-      : [],
-    inclus: list(doc.inclus),
+    prixEnfant: doc.prixEnfant ?? undefined,
+    ageEnfantMax: num(doc.ageEnfantMax, 12),
+    placesParDefaut: num(doc.placesParDefaut, 12),
+    minParticipants: num(doc.minParticipants, 1),
+    maxParticipants: num(doc.maxParticipants, 8),
+    temps_forts: labels(doc.temps_forts),
+    programme: (doc.programme ?? []).map((step) => ({
+      time: step.time,
+      title: step.title,
+      detail: step.detail,
+    })),
+    inclus: labels(doc.inclus),
+    nonInclus: labels(doc.nonInclus),
+    equipement: labels(doc.equipement),
+    pratique: (doc.pratique ?? []).map((item) => ({ label: item.label, detail: item.detail })),
+    rendezVous: {
+      lieu: doc.rendezVous?.lieu ?? "",
+      adresse: doc.rendezVous?.adresse ?? "",
+      lat: doc.rendezVous?.lat ?? undefined,
+      lng: doc.rendezVous?.lng ?? undefined,
+      heure: doc.rendezVous?.heure ?? "",
+    },
+    cover: toMedia(doc.cover),
+    gallery: (doc.gallery ?? []).map(toMedia).filter((m): m is MediaRef => Boolean(m)),
+    gpx: toMedia(doc.gpx),
   }
 }
 
-export async function getAdventures(): Promise<Adventure[]> {
-  if (!usePayload) return ADVENTURES
-
-  try {
-    const [{ getPayload }, { default: config }] = await Promise.all([
-      import("payload"),
-      import("@payload-config"),
-    ])
-    const payload = await getPayload({ config })
-    const { docs } = await payload.find({
-      collection: "adventures",
-      limit: 100,
-      sort: "ordre",
-      depth: 1,
-    })
-    if (docs.length === 0) return ADVENTURES
-    return docs.map((doc) => toAdventure(doc as unknown as Record<string, unknown>))
-  } catch (error) {
-    // Un site vitrine ne doit pas tomber parce que la base est injoignable.
-    console.warn("[content] Payload indisponible, contenu de démo servi.", error)
-    return ADVENTURES
+function toRegion(doc: RegionDoc): Region {
+  return {
+    slug: doc.slug,
+    code: doc.code,
+    name: doc.name,
+    description: doc.description ?? "",
+    active: doc.active ?? true,
   }
+}
+
+function toPartner(doc: PartnerDoc): Partner {
+  return {
+    slug: doc.slug,
+    name: doc.name,
+    tagline: doc.tagline ?? "",
+    description: doc.description ?? "",
+    commune: doc.commune,
+    departement: doc.departement ?? "",
+    adresse: doc.adresse ?? "",
+    website: doc.website ?? undefined,
+    telephone: doc.telephone ?? undefined,
+    regionSlugs: (doc.regions ?? [])
+      .map((r) => populated(r)?.slug)
+      .filter((s): s is string => Boolean(s)),
+    logo: toMedia(doc.logo),
+    active: doc.active ?? true,
+  }
+}
+
+function toSlot(doc: SlotDoc): Slot | undefined {
+  const adventure = populated(doc.adventure)
+  const partner = populated(doc.partner)
+  if (!adventure || !partner) return undefined
+  const places = num(doc.places)
+  const placesReservees = num(doc.placesReservees)
+  return {
+    id: String(doc.id),
+    adventureSlug: adventure.slug,
+    partnerSlug: partner.slug,
+    partnerName: partner.name,
+    date: toDateKey(new Date(doc.date)),
+    heure: doc.heure || adventure.rendezVous?.heure || "",
+    places,
+    placesReservees,
+    placesRestantes: Math.max(0, places - placesReservees),
+    prix: doc.prix ?? adventure.prix,
+    statut: doc.statut,
+  }
+}
+
+function toFaq(doc: FaqDoc): Faq {
+  return {
+    id: String(doc.id),
+    question: doc.question,
+    reponse: doc.reponse,
+    categorie: doc.categorie,
+    general: doc.general ?? true,
+    adventureSlugs: (doc.adventures ?? [])
+      .map((a) => populated(a)?.slug)
+      .filter((s): s is string => Boolean(s)),
+  }
+}
+
+function toReview(doc: ReviewDoc): Review {
+  return {
+    id: String(doc.id),
+    auteur: doc.auteur,
+    note: (Number(doc.note) || 5) as Review["note"],
+    texte: doc.texte,
+    date: toDateKey(new Date(doc.date)),
+    adventureSlug: populated(doc.adventure)?.slug,
+  }
+}
+
+function toPage(doc: PageDoc): Page {
+  return {
+    slug: doc.slug,
+    title: doc.title,
+    description: doc.description ?? "",
+    body: { kind: "lexical", data: doc.content },
+    updatedAt: toDateKey(new Date(doc.updatedAt)),
+  }
+}
+
+function toSettings(doc: SettingsDoc): SiteSettings {
+  const text = (value: string | null | undefined, fallback = "") => value ?? fallback
+  return {
+    email: doc.email || SETTINGS_DEMO.email,
+    telephone: text(doc.telephone),
+    adresse: text(doc.adresse),
+    horaires: text(doc.horaires),
+    instagram: doc.instagram ?? undefined,
+    facebook: doc.facebook ?? undefined,
+    raisonSociale: text(doc.raisonSociale),
+    formeJuridique: text(doc.formeJuridique),
+    capital: text(doc.capital),
+    siret: text(doc.siret),
+    tva: text(doc.tva),
+    siegeSocial: text(doc.siegeSocial),
+    directeurPublication: text(doc.directeurPublication),
+    immatriculationTourisme: text(doc.immatriculationTourisme),
+    assuranceRc: text(doc.assuranceRc),
+    delaiAnnulationJours: num(doc.delaiAnnulationJours, 7),
+    messageAccueil: text(doc.messageAccueil),
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Aventures
+// ----------------------------------------------------------------------------
+
+export async function getAdventures(): Promise<Adventure[]> {
+  return readOrDemo(
+    "adventures",
+    async (payload) => {
+      const { docs } = await payload.find({
+        collection: "adventures",
+        where: { actif: { not_equals: false } },
+        limit: 100,
+        sort: "ordre",
+        depth: 1,
+      })
+      return docs.length ? docs.map(toAdventure) : ADVENTURES
+    },
+    () => ADVENTURES,
+  )
 }
 
 export async function getAdventure(slug: string): Promise<Adventure | undefined> {
   const all = await getAdventures()
   return all.find((a) => a.slug === slug)
+}
+
+// ----------------------------------------------------------------------------
+// Réseau : régions et partenaires
+// ----------------------------------------------------------------------------
+
+export async function getRegions(): Promise<Region[]> {
+  return readOrDemo(
+    "regions",
+    async (payload) => {
+      const { docs } = await payload.find({ collection: "regions", limit: 50, sort: "ordre", depth: 0 })
+      return docs.length ? docs.map(toRegion) : REGIONS_DEMO
+    },
+    () => REGIONS_DEMO,
+  )
+}
+
+export async function getPartners(): Promise<Partner[]> {
+  return readOrDemo(
+    "partners",
+    async (payload) => {
+      const { docs } = await payload.find({
+        collection: "partners",
+        where: { active: { not_equals: false } },
+        limit: 100,
+        sort: "name",
+        depth: 1,
+      })
+      return docs.length ? docs.map(toPartner) : PARTNERS_DEMO
+    },
+    () => PARTNERS_DEMO.filter((p) => p.active),
+  )
+}
+
+export async function getPartner(slug: string): Promise<Partner | undefined> {
+  const all = await getPartners()
+  return all.find((p) => p.slug === slug)
+}
+
+// ----------------------------------------------------------------------------
+// Créneaux
+// ----------------------------------------------------------------------------
+
+type SlotQuery = {
+  adventureSlug?: string
+  /** Inclure les créneaux complets (pour les afficher barrés). */
+  includeFull?: boolean
+  /** Date de début (incluse), AAAA-MM-JJ. Par défaut aujourd'hui. */
+  from?: string
+  limit?: number
+}
+
+const slotStatuses = (includeFull: boolean) => (includeFull ? ["ouvert", "complet"] : ["ouvert"])
+
+function filterDemoSlots(query: SlotQuery): Slot[] {
+  const from = query.from ?? toDateKey(new Date())
+  const statuses = slotStatuses(query.includeFull ?? true)
+  return slotsDemo()
+    .filter((s) => s.date >= from)
+    .filter((s) => !query.adventureSlug || s.adventureSlug === query.adventureSlug)
+    .filter((s) => statuses.includes(s.statut))
+    .slice(0, query.limit ?? 200)
+}
+
+/** Créneaux à venir, triés par date. Les créneaux fermés ou annulés ne sortent jamais. */
+export async function getSlots(query: SlotQuery = {}): Promise<Slot[]> {
+  return readOrDemo(
+    "slots",
+    async (payload) => {
+      const from = query.from ?? toDateKey(new Date())
+      const where: Where = {
+        and: [
+          { date: { greater_than_equal: `${from}T00:00:00.000Z` } },
+          { statut: { in: slotStatuses(query.includeFull ?? true) } },
+          { "partner.active": { not_equals: false } },
+        ],
+      }
+      if (query.adventureSlug) {
+        where.and!.push({ "adventure.slug": { equals: query.adventureSlug } })
+      }
+      const { docs } = await payload.find({
+        collection: "slots",
+        where,
+        limit: query.limit ?? 200,
+        sort: "date",
+        depth: 1,
+      })
+      return docs.map(toSlot).filter((s): s is Slot => Boolean(s))
+    },
+    () => filterDemoSlots(query),
+  )
+}
+
+export async function getSlot(id: string): Promise<Slot | undefined> {
+  return readOrDemo(
+    "slot",
+    async (payload) => {
+      const doc = await payload.findByID({ collection: "slots", id, depth: 1 })
+      return toSlot(doc)
+    },
+    () => slotsDemo().find((s) => s.id === id),
+  )
+}
+
+// ----------------------------------------------------------------------------
+// FAQ, avis, pages, paramètres
+// ----------------------------------------------------------------------------
+
+export async function getFaqs(options: { adventureSlug?: string; general?: boolean } = {}): Promise<Faq[]> {
+  const pick = (faqs: Faq[]) =>
+    faqs.filter((f) => {
+      if (options.adventureSlug) return f.adventureSlugs.includes(options.adventureSlug)
+      if (options.general) return f.general
+      return true
+    })
+
+  return readOrDemo(
+    "faqs",
+    async (payload) => {
+      const { docs } = await payload.find({
+        collection: "faqs",
+        where: { publie: { not_equals: false } },
+        limit: 200,
+        sort: "ordre",
+        depth: 1,
+      })
+      return pick(docs.length ? docs.map(toFaq) : FAQS_DEMO)
+    },
+    () => pick(FAQS_DEMO),
+  )
+}
+
+export async function getReviews(adventureSlug?: string): Promise<Review[]> {
+  const pick = (reviews: Review[]) =>
+    adventureSlug ? reviews.filter((r) => r.adventureSlug === adventureSlug) : reviews
+
+  return readOrDemo(
+    "reviews",
+    async (payload) => {
+      const { docs } = await payload.find({
+        collection: "reviews",
+        where: { publie: { equals: true } },
+        limit: 200,
+        sort: "-date",
+        depth: 1,
+      })
+      return pick(docs.map(toReview))
+    },
+    () => pick(REVIEWS_DEMO),
+  )
+}
+
+export async function getPages(): Promise<Page[]> {
+  return readOrDemo(
+    "pages",
+    async (payload) => {
+      const { docs } = await payload.find({
+        collection: "pages",
+        where: { publie: { not_equals: false } },
+        limit: 100,
+        depth: 0,
+      })
+      return docs.length ? docs.map(toPage) : PAGES_DEMO
+    },
+    () => PAGES_DEMO,
+  )
+}
+
+export async function getPage(slug: string): Promise<Page | undefined> {
+  const pages = await getPages()
+  return pages.find((p) => p.slug === slug)
+}
+
+export async function getSettings(): Promise<SiteSettings> {
+  return readOrDemo(
+    "site-settings",
+    async (payload: Payload) => {
+      const doc = await payload.findGlobal({ slug: "site-settings", depth: 0 })
+      return doc?.email ? toSettings(doc) : SETTINGS_DEMO
+    },
+    () => SETTINGS_DEMO,
+  )
 }

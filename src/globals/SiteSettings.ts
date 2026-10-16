@@ -1,0 +1,76 @@
+import type { GlobalConfig } from "payload"
+
+import { revalidateGlobal } from "../lib/revalidate"
+
+/** Coordonnées et informations légales, reprises dans le pied de page et les pages légales. */
+export const SiteSettings: GlobalConfig = {
+  slug: "site-settings",
+  hooks: { afterChange: [revalidateGlobal] },
+  label: "Paramètres du site",
+  admin: { group: "Administration" },
+  access: { read: () => true },
+  fields: [
+    {
+      type: "tabs",
+      tabs: [
+        {
+          label: "Coordonnées",
+          fields: [
+            { name: "email", type: "email", required: true, label: "Courriel de contact" },
+            { name: "telephone", type: "text", label: "Téléphone" },
+            { name: "adresse", type: "textarea", label: "Adresse du bureau" },
+            { name: "horaires", type: "text", label: "Saison / horaires" },
+            {
+              type: "row",
+              fields: [
+                { name: "instagram", type: "text", label: "Instagram (URL)" },
+                { name: "facebook", type: "text", label: "Facebook (URL)" },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Informations légales",
+          fields: [
+            { name: "raisonSociale", type: "text", label: "Raison sociale" },
+            {
+              type: "row",
+              fields: [
+                { name: "formeJuridique", type: "text", label: "Forme juridique" },
+                { name: "capital", type: "text", label: "Capital social" },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "siret", type: "text", label: "SIRET" },
+                { name: "tva", type: "text", label: "N° TVA intracommunautaire" },
+              ],
+            },
+            { name: "siegeSocial", type: "textarea", label: "Siège social" },
+            { name: "directeurPublication", type: "text", label: "Directeur de la publication" },
+            { name: "immatriculationTourisme", type: "text", label: "Immatriculation Atout France" },
+            { name: "assuranceRc", type: "text", label: "Assurance RC professionnelle" },
+          ],
+        },
+        {
+          label: "Réservation",
+          fields: [
+            {
+              name: "delaiAnnulationJours",
+              type: "number",
+              defaultValue: 7,
+              label: "Annulation gratuite jusqu'à (jours avant)",
+            },
+            {
+              name: "messageAccueil",
+              type: "textarea",
+              label: "Message affiché sur l'accueil",
+              admin: { description: "Ex. « Le calendrier 2027 ouvre en février. »" },
+            },
+          ],
+        },
+      ],
+    },
+  ],
+}

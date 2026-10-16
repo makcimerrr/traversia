@@ -9,8 +9,16 @@ import { buildConfig } from "payload"
 import sharp from "sharp"
 
 import { Adventures } from "./collections/Adventures"
+import { Faqs } from "./collections/Faqs"
 import { Media } from "./collections/Media"
+import { Messages } from "./collections/Messages"
+import { Pages } from "./collections/Pages"
+import { Partners } from "./collections/Partners"
+import { Regions } from "./collections/Regions"
+import { Reviews } from "./collections/Reviews"
+import { Slots } from "./collections/Slots"
 import { Users } from "./collections/Users"
+import { SiteSettings } from "./globals/SiteSettings"
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -35,7 +43,19 @@ export default buildConfig({
     },
   },
   i18n: { supportedLanguages: { fr } },
-  collections: [Adventures, Media, Users],
+  collections: [
+    Adventures,
+    Slots,
+    Regions,
+    Partners,
+    Faqs,
+    Reviews,
+    Pages,
+    Messages,
+    Media,
+    Users,
+  ],
+  globals: [SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

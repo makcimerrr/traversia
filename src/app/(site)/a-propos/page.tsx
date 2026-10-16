@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Container, Eyebrow, Section } from "@/components/site/section"
 
 export const metadata: Metadata = {
-  title: "L'entreprise",
+  title: "À propos",
   description:
     "Traversia, atelier d'itinéraires normands : qui nous sommes, comment nous travaillons, ce que nous refusons de faire.",
 }
@@ -35,11 +35,11 @@ const PRINCIPES = [
   },
 ]
 
-export default function EntreprisePage() {
+export default function AProposPage() {
   return (
     <>
       <Container className="py-14 sm:py-20">
-        <Eyebrow>L&apos;entreprise</Eyebrow>
+        <Eyebrow>À propos</Eyebrow>
         <h1 className="mt-8 max-w-4xl text-[3rem] leading-[0.96] sm:text-6xl lg:text-7xl">
           Un atelier d&apos;itinéraires, installé dans une vallée
         </h1>

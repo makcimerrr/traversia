@@ -68,6 +68,13 @@ export interface Config {
   blocks: {};
   collections: {
     adventures: Adventure;
+    slots: Slot;
+    regions: Region;
+    partners: Partner;
+    faqs: Faq;
+    reviews: Review;
+    pages: Page;
+    messages: Message;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -75,9 +82,28 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    adventures: {
+      slots: 'slots';
+      faqs: 'faqs';
+      reviews: 'reviews';
+    };
+    regions: {
+      adventures: 'adventures';
+    };
+    partners: {
+      slots: 'slots';
+    };
+  };
   collectionsSelect: {
     adventures: AdventuresSelect<false> | AdventuresSelect<true>;
+    slots: SlotsSelect<false> | SlotsSelect<true>;
+    regions: RegionsSelect<false> | RegionsSelect<true>;
+    partners: PartnersSelect<false> | PartnersSelect<true>;
+    faqs: FaqsSelect<false> | FaqsSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    messages: MessagesSelect<false> | MessagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -89,8 +115,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -131,10 +161,15 @@ export interface Adventure {
    * Une ligne, affichée sur la carte-fiche.
    */
   tagline: string;
+  actif?: boolean | null;
   ordre: number;
   commune: string;
   departement: string;
-  regionCode: '28';
+  region: number | Region;
+  /**
+   * Proposé par défaut à la création d'un créneau.
+   */
+  partner?: (number | null) | Partner;
   /**
    * Correspond à une clé de SPOT_XY dans src/lib/france-map.ts.
    */
@@ -146,6 +181,16 @@ export interface Adventure {
     | 'baie-mont-saint-michel'
     | 'vallee-de-leure'
     | 'vire-souleuvre';
+  rendezVous?: {
+    /**
+     * Ex. Parking de la base nautique.
+     */
+    lieu?: string | null;
+    adresse?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    heure?: string | null;
+  };
   distanceKm: number;
   deniveleM: number;
   /**
@@ -156,12 +201,24 @@ export interface Adventure {
    * Obligatoire : tout parcours comporte une partie sur l'eau.
    */
   canoeKm: number;
+  tempsRandoH?: number | null;
+  tempsCanoeH?: number | null;
   dureeH: number;
   jours: number;
   difficulty: '1' | '2' | '3' | '4' | '5';
+  ageMin?: number | null;
+  /**
+   * Ex. Marcheur régulier, à l'aise dans l'eau. Aucune expérience de canoë requise.
+   */
+  niveauConseille?: string | null;
   saison: string;
   groupe: string;
   prix: number;
+  prixEnfant?: number | null;
+  ageEnfantMax?: number | null;
+  placesParDefaut?: number | null;
+  minParticipants?: number | null;
+  maxParticipants?: number | null;
   /**
    * Deux à quatre phrases : donner envie, pas tout dire.
    */
@@ -186,8 +243,116 @@ export interface Adventure {
         id?: string | null;
       }[]
     | null;
+  nonInclus?:
+    | {
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Ce que le participant doit apporter.
+   */
+  equipement?:
+    | {
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Parking, repas, météo, navette…
+   */
+  pratique?:
+    | {
+        label: string;
+        detail: string;
+        id?: string | null;
+      }[]
+    | null;
   cover?: (number | null) | Media;
   gallery?: (number | Media)[] | null;
+  /**
+   * Envoyée au client après réservation.
+   */
+  gpx?: (number | null) | Media;
+  slots?: {
+    docs?: (number | Slot)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  faqs?: {
+    docs?: (number | Faq)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  reviews?: {
+    docs?: (number | Review)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "regions".
+ */
+export interface Region {
+  id: number;
+  name: string;
+  slug: string;
+  /**
+   * Ex. 28 pour la Normandie, 53 pour la Bretagne.
+   */
+  code: string;
+  /**
+   * Deux ou trois phrases sur le territoire.
+   */
+  description?: string | null;
+  /**
+   * Décochée, la région apparaît comme « bientôt » sur la carte.
+   */
+  active?: boolean | null;
+  ordre?: number | null;
+  adventures?: {
+    docs?: (number | Adventure)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners".
+ */
+export interface Partner {
+  id: number;
+  name: string;
+  slug: string;
+  /**
+   * Décoché, le partenaire et ses créneaux disparaissent du site.
+   */
+  active?: boolean | null;
+  logo?: (number | null) | Media;
+  /**
+   * Une ligne.
+   */
+  tagline?: string | null;
+  description?: string | null;
+  regions?: (number | Region)[] | null;
+  commune: string;
+  departement?: string | null;
+  adresse?: string | null;
+  email?: string | null;
+  telephone?: string | null;
+  website?: string | null;
+  contactNom?: string | null;
+  notes?: string | null;
+  slots?: {
+    docs?: (number | Slot)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -198,7 +363,7 @@ export interface Adventure {
 export interface Media {
   id: number;
   /**
-   * Décrit l'image pour les lecteurs d'écran.
+   * Décrit l'image pour les lecteurs d'écran. Pour un fichier, son intitulé.
    */
   alt: string;
   credit?: string | null;
@@ -231,6 +396,121 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * Une ligne par date proposée. Pour fermer une date complète, passer son statut à « Fermé ».
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "slots".
+ */
+export interface Slot {
+  id: number;
+  titre?: string | null;
+  adventure: number | Adventure;
+  partner: number | Partner;
+  date: string;
+  /**
+   * Ex. 08h30. Vide : celle de la fiche.
+   */
+  heure?: string | null;
+  statut: 'ouvert' | 'complet' | 'ferme' | 'annule';
+  places: number;
+  /**
+   * Calculé depuis les réservations.
+   */
+  placesReservees?: number | null;
+  /**
+   * Vide : le prix de la fiche s'applique.
+   */
+  prix?: number | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  question: string;
+  reponse: string;
+  categorie: 'reservation' | 'jour-j' | 'materiel' | 'securite' | 'annulation';
+  ordre?: number | null;
+  publie?: boolean | null;
+  general?: boolean | null;
+  /**
+   * La question s'affiche aussi sur les fiches sélectionnées.
+   */
+  adventures?: (number | Adventure)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: number;
+  auteur: string;
+  note: '5' | '4' | '3' | '2' | '1';
+  date: string;
+  texte: string;
+  adventure?: (number | null) | Adventure;
+  publie?: boolean | null;
+  email?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * La page est servie sur /identifiant.
+   */
+  slug: string;
+  publie?: boolean | null;
+  /**
+   * Pour les moteurs de recherche. 150 caractères environ.
+   */
+  description?: string | null;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages".
+ */
+export interface Message {
+  id: number;
+  nom: string;
+  email: string;
+  telephone?: string | null;
+  motif: 'reservation' | 'groupe' | 'niveau' | 'autre';
+  adventure?: (number | null) | Adventure;
+  message: string;
+  traite?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -285,6 +565,34 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'adventures';
         value: number | Adventure;
+      } | null)
+    | ({
+        relationTo: 'slots';
+        value: number | Slot;
+      } | null)
+    | ({
+        relationTo: 'regions';
+        value: number | Region;
+      } | null)
+    | ({
+        relationTo: 'partners';
+        value: number | Partner;
+      } | null)
+    | ({
+        relationTo: 'faqs';
+        value: number | Faq;
+      } | null)
+    | ({
+        relationTo: 'reviews';
+        value: number | Review;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'messages';
+        value: number | Message;
       } | null)
     | ({
         relationTo: 'media';
@@ -344,21 +652,41 @@ export interface AdventuresSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   tagline?: T;
+  actif?: T;
   ordre?: T;
   commune?: T;
   departement?: T;
-  regionCode?: T;
+  region?: T;
+  partner?: T;
   spotId?: T;
+  rendezVous?:
+    | T
+    | {
+        lieu?: T;
+        adresse?: T;
+        lat?: T;
+        lng?: T;
+        heure?: T;
+      };
   distanceKm?: T;
   deniveleM?: T;
   randoKm?: T;
   canoeKm?: T;
+  tempsRandoH?: T;
+  tempsCanoeH?: T;
   dureeH?: T;
   jours?: T;
   difficulty?: T;
+  ageMin?: T;
+  niveauConseille?: T;
   saison?: T;
   groupe?: T;
   prix?: T;
+  prixEnfant?: T;
+  ageEnfantMax?: T;
+  placesParDefaut?: T;
+  minParticipants?: T;
+  maxParticipants?: T;
   intro?: T;
   temps_forts?:
     | T
@@ -380,8 +708,146 @@ export interface AdventuresSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
+  nonInclus?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
+  equipement?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
+  pratique?:
+    | T
+    | {
+        label?: T;
+        detail?: T;
+        id?: T;
+      };
   cover?: T;
   gallery?: T;
+  gpx?: T;
+  slots?: T;
+  faqs?: T;
+  reviews?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "slots_select".
+ */
+export interface SlotsSelect<T extends boolean = true> {
+  titre?: T;
+  adventure?: T;
+  partner?: T;
+  date?: T;
+  heure?: T;
+  statut?: T;
+  places?: T;
+  placesReservees?: T;
+  prix?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "regions_select".
+ */
+export interface RegionsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  code?: T;
+  description?: T;
+  active?: T;
+  ordre?: T;
+  adventures?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners_select".
+ */
+export interface PartnersSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  active?: T;
+  logo?: T;
+  tagline?: T;
+  description?: T;
+  regions?: T;
+  commune?: T;
+  departement?: T;
+  adresse?: T;
+  email?: T;
+  telephone?: T;
+  website?: T;
+  contactNom?: T;
+  notes?: T;
+  slots?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs_select".
+ */
+export interface FaqsSelect<T extends boolean = true> {
+  question?: T;
+  reponse?: T;
+  categorie?: T;
+  ordre?: T;
+  publie?: T;
+  general?: T;
+  adventures?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  auteur?: T;
+  note?: T;
+  date?: T;
+  texte?: T;
+  adventure?: T;
+  publie?: T;
+  email?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  publie?: T;
+  description?: T;
+  content?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages_select".
+ */
+export interface MessagesSelect<T extends boolean = true> {
+  nom?: T;
+  email?: T;
+  telephone?: T;
+  motif?: T;
+  adventure?: T;
+  message?: T;
+  traite?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -490,6 +956,61 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  email: string;
+  telephone?: string | null;
+  adresse?: string | null;
+  horaires?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  raisonSociale?: string | null;
+  formeJuridique?: string | null;
+  capital?: string | null;
+  siret?: string | null;
+  tva?: string | null;
+  siegeSocial?: string | null;
+  directeurPublication?: string | null;
+  immatriculationTourisme?: string | null;
+  assuranceRc?: string | null;
+  delaiAnnulationJours?: number | null;
+  /**
+   * Ex. « Le calendrier 2027 ouvre en février. »
+   */
+  messageAccueil?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  email?: T;
+  telephone?: T;
+  adresse?: T;
+  horaires?: T;
+  instagram?: T;
+  facebook?: T;
+  raisonSociale?: T;
+  formeJuridique?: T;
+  capital?: T;
+  siret?: T;
+  tva?: T;
+  siegeSocial?: T;
+  directeurPublication?: T;
+  immatriculationTourisme?: T;
+  assuranceRc?: T;
+  delaiAnnulationJours?: T;
+  messageAccueil?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
     // URL non reconnues doit être un document autonome.
     globalNotFound: true,
   },
+  async redirects() {
+    return [{ source: "/entreprise", destination: "/a-propos", permanent: true }]
+  },
   images: {
     // Les médias sont servis depuis le store Vercel Blob.
     remotePatterns: [

@@ -5,6 +5,9 @@ import { SiteHeader } from "@/components/site/site-header"
 import { fontVariables } from "@/lib/fonts"
 import "./globals.css"
 
+/** Les pages sont prérendues et rafraîchies au plus tard toutes les cinq minutes. */
+export const revalidate = 300
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://traversia.fr"),
   title: {
