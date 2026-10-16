@@ -266,6 +266,7 @@ export const SETTINGS_DEMO: SiteSettings = {
   immatriculationTourisme: "IM000000000",
   assuranceRc: "À compléter",
   delaiAnnulationJours: 7,
+  ouvertureTraceHeures: 3,
   messageAccueil: "Le calendrier 2027 ouvre en février. Les groupes sont limités à douze.",
 }
 

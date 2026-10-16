@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload"
 
+import { adminOnly } from "../lib/access"
+
 export const GIFT_CARD_STATUS = [
   { label: "En attente de paiement", value: "en_attente" },
   { label: "Active", value: "active" },
@@ -30,10 +32,10 @@ export const GiftCards: CollectionConfig = {
   },
   labels: { singular: "Carte cadeau", plural: "Cartes cadeaux" },
   access: {
-    read: ({ req }) => Boolean(req.user),
-    create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    read: adminOnly,
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   defaultSort: "-createdAt",
   hooks: {

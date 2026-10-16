@@ -3,6 +3,7 @@ import "server-only"
 import type { Payload } from "payload"
 
 import { toAdventure, toSlot, getSettings } from "./content"
+import { issueActivationUrl } from "./customer-account"
 import { toDateKey } from "./demo"
 import { DiscountError, resolveDiscount, type Discount } from "./discounts"
 import {
@@ -339,7 +340,17 @@ export async function confirmBooking(
   const booking = await loadBooking(payload, bookingId)
   if (booking && !current.confirmationEnvoyeeLe) {
     const settings = await getSettings()
-    const mail = bookingConfirmationEmail(booking, settings, siteUrl)
+    // Premier paiement : le compte client existe déjà (fiche), on envoie le lien
+    // pour définir le mot de passe tant qu'il n'a jamais été activé.
+    let activationUrl: string | undefined
+    const customerId = typeof current.customer === "object" ? current.customer?.id : current.customer
+    if (customerId) {
+      const customer = await payload.findByID({ collection: "customers", id: customerId, depth: 0 })
+      if (!customer.compteActiveLe) {
+        activationUrl = await issueActivationUrl(payload, customer.email, siteUrl).catch(() => undefined)
+      }
+    }
+    const mail = bookingConfirmationEmail(booking, settings, siteUrl, activationUrl)
     const sent = await sendEmail({ to: booking.email, replyTo: settings.email, ...mail })
     const admin = adminBookingEmail(booking, siteUrl)
     await sendEmail({ to: settings.email, replyTo: booking.email, ...admin })

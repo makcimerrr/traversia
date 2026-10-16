@@ -1,6 +1,8 @@
 import type { CollectionConfig } from "payload"
 
-import { cancelBookingEndpoint } from "../lib/bookings-admin"
+import { adminOnly, adminOrOwnBookings } from "../lib/access"
+
+import { cancelBookingEndpoint, traceEndpoint } from "../lib/bookings-admin"
 import { syncSlotStock } from "../lib/bookings-stock"
 import { revalidateAfterChange, revalidateAfterDelete } from "../lib/revalidate"
 import { BOOKING_STATUS } from "../lib/types"
@@ -31,13 +33,13 @@ export const Bookings: CollectionConfig = {
       },
     },
   },
-  endpoints: [cancelBookingEndpoint],
+  endpoints: [cancelBookingEndpoint, traceEndpoint],
   labels: { singular: "Réservation", plural: "Réservations" },
   access: {
-    read: ({ req }) => Boolean(req.user),
-    create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    read: adminOrOwnBookings,
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   defaultSort: "-createdAt",
   hooks: {

@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload"
 
+import { adminOnly } from "../lib/access"
+
 import { MESSAGE_MOTIFS } from "../lib/types"
 
 /** Messages reçus par le formulaire de contact. Création publique, lecture admin. */
@@ -12,9 +14,9 @@ export const Messages: CollectionConfig = {
   },
   labels: { singular: "Message", plural: "Messages" },
   access: {
-    read: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    read: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   defaultSort: "-createdAt",
   fields: [

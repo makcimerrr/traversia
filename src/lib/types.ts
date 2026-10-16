@@ -179,6 +179,7 @@ export type SiteSettings = {
   immatriculationTourisme: string
   assuranceRc: string
   delaiAnnulationJours: number
+  ouvertureTraceHeures: number
   messageAccueil: string
   gaId?: string
   metaPixelId?: string

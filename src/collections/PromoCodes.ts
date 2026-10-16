@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload"
 
+import { adminOnly } from "../lib/access"
+
 import { revalidateHooks } from "../lib/revalidate"
 
 /**
@@ -15,10 +17,10 @@ export const PromoCodes: CollectionConfig = {
   },
   labels: { singular: "Code promotionnel", plural: "Codes promotionnels" },
   access: {
-    read: ({ req }) => Boolean(req.user),
-    create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    read: adminOnly,
+    create: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   hooks: {
     ...revalidateHooks,

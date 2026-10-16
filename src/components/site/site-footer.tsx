@@ -21,6 +21,7 @@ const COLUMNS = [
     title: "Pratique",
     links: [
       { href: "/aventures", label: "Réserver une sortie" },
+      { href: "/compte", label: "Mon compte" },
       { href: "/contact?motif=groupe", label: "Groupes & entreprises" },
       { href: "/cartes-cadeaux", label: "Cartes cadeaux" },
       { href: "/cgv", label: "Conditions de vente" },

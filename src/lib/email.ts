@@ -80,6 +80,7 @@ export function bookingConfirmationEmail(
   booking: Booking,
   settings: SiteSettings,
   siteUrl: string,
+  activationUrl?: string,
 ): { subject: string; html: string; text: string } {
   const { adventure } = booking
   const { rows, text } = recap(booking)
@@ -97,6 +98,10 @@ export function bookingConfirmationEmail(
       h2("À apporter") +
       ul(adventure.equipement) +
       (adventure.pratique.length ? h2("Informations pratiques") + ul(adventure.pratique.map((i) => `${i.label} : ${i.detail}`)) : "") +
+      (activationUrl
+        ? h2("Votre compte Traversia") +
+          p(`Votre compte est créé. <a href="${activationUrl}" style="color:#111">Définissez votre mot de passe</a> pour retrouver vos réservations, vos factures et, le jour J, le tracé du parcours dans l'application. Le lien reste valable deux jours ; vous pourrez en redemander un depuis <a href="${siteUrl}/compte" style="color:#111">votre espace</a>.`)
+        : "") +
       h2("Annulation") +
       p(`Annulation gratuite jusqu'à ${settings.delaiAnnulationJours} jours avant la date. En cas de météo défavorable, nous reportons ou remboursons intégralement.`) +
       p(`Une question ? Répondez à ce message ou écrivez à <a href="mailto:${settings.email}" style="color:#111">${settings.email}</a>.`),
@@ -110,6 +115,7 @@ export function bookingConfirmationEmail(
     `Votre réservation : ${url}`,
     `Facture : ${url}/facture`,
     gpx ? `Trace GPX : ${gpx}` : "",
+    activationUrl ? `Votre compte : définissez votre mot de passe sur ${activationUrl}` : "",
     "",
     "Horaires",
     ...adventure.programme.map((s) => `- ${s.time} — ${s.title}`),
@@ -227,4 +233,16 @@ export function giftCardReceiptEmail(card: GiftCardView, siteUrl: string): { sub
     html,
     text: `Merci, ${card.acheteurNom}. Carte cadeau de ${formatPrice(card.montantInitial)} réglée.\nCode : ${card.code}\n${sentTo}`,
   }
+}
+
+export function accountLinkEmail(prenom: string, url: string, alreadyActive: boolean): { subject: string; html: string; text: string } {
+  const title = alreadyActive ? `Nouveau mot de passe, ${prenom}.` : `Votre compte Traversia, ${prenom}.`
+  const html = layout(
+    title,
+    p(alreadyActive
+      ? `Vous avez demandé à redéfinir votre mot de passe. <a href="${url}" style="color:#111">Choisir un nouveau mot de passe</a>.`
+      : `Définissez votre mot de passe pour retrouver vos réservations, vos factures et le tracé de vos parcours : <a href="${url}" style="color:#111">activer mon compte</a>.`) +
+      p("Ce lien reste valable deux jours. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message."),
+  )
+  return { subject: alreadyActive ? "Votre nouveau mot de passe Traversia" : "Activez votre compte Traversia", html, text: `${title}\n\n${url}\n\nLien valable deux jours.` }
 }

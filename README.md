@@ -110,6 +110,32 @@ dans le même champ du tunnel. Une carte cadeau s'achète sur
 et se consomme en une ou plusieurs fois ; le solde est recrédité en cas
 d'annulation.
 
+## Comptes clients et API pour l'application mobile
+
+Le compte client est créé au premier paiement confirmé : l'e-mail de
+confirmation contient un lien (valable deux jours) pour définir le mot de
+passe. Le client se connecte ensuite sur `/compte` ou dans l'application
+avec le même identifiant. Un lien se redemande depuis `/compte`.
+
+Les droits sont stricts : un client ne lit que sa fiche et ses
+réservations ; tout le reste est réservé aux administrateurs
+(`src/lib/access.ts`).
+
+API JSON (Payload) utilisée par l'application :
+
+| Appel | Rôle |
+| --- | --- |
+| `POST /api/customers/login` `{ email, password }` | Connexion, renvoie `token` (JWT) et `user` |
+| `GET /api/customers/me` | Profil du client connecté (`Authorization: JWT <token>`) |
+| `POST /api/customers/lien-connexion` `{ email }` | Envoi d'un lien pour définir le mot de passe |
+| `GET /api/bookings?depth=2&sort=-createdAt` | Réservations du client connecté, aventure et créneau inclus |
+| `GET /reservation/<référence>/facture` | Facture PDF |
+| `GET /api/bookings/<id>/trace` | Fichier GPX, uniquement à partir de l'heure d'ouverture (`423` avec `ouvreLe` avant) |
+
+L'heure d'ouverture du tracé est le rendez-vous moins le délai « Tracé GPX
+disponible » des paramètres du site (trois heures par défaut). La position
+en temps réel reste sur le téléphone : rien ne remonte au serveur.
+
 ## Marketing et référencement
 
 - Journal (`/blog`) alimenté par la collection Articles ; lettre

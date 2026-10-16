@@ -77,6 +77,14 @@ export const SiteSettings: GlobalConfig = {
               label: "Annulation gratuite jusqu'à (jours avant)",
             },
             {
+              name: "ouvertureTraceHeures",
+              type: "number",
+              defaultValue: 3,
+              min: 0,
+              label: "Tracé GPX disponible (heures avant le départ)",
+              admin: { description: "Dans l'application, le tracé se déverrouille ce nombre d'heures avant l'heure de rendez-vous." },
+            },
+            {
               name: "messageAccueil",
               type: "textarea",
               label: "Message affiché sur l'accueil",

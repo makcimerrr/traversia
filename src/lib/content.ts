@@ -258,6 +258,7 @@ function toSettings(doc: SettingsDoc): SiteSettings {
     immatriculationTourisme: text(doc.immatriculationTourisme),
     assuranceRc: text(doc.assuranceRc),
     delaiAnnulationJours: num(doc.delaiAnnulationJours, 7),
+    ouvertureTraceHeures: num(doc.ouvertureTraceHeures, 3),
     messageAccueil: text(doc.messageAccueil),
     gaId: doc.gaId ?? undefined,
     metaPixelId: doc.metaPixelId ?? undefined,

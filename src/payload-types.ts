@@ -63,6 +63,7 @@ export type SupportedTimezones =
 
 export interface Config {
   auth: {
+    customers: CustomerAuthOperations;
     users: UserAuthOperations;
   };
   blocks: {};
@@ -143,10 +144,28 @@ export interface Config {
   widgets: {
     collections: CollectionsWidget;
   };
-  user: User;
+  user: Customer | User;
   jobs: {
     tasks: unknown;
     workflows: unknown;
+  };
+}
+export interface CustomerAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
   };
 }
 export interface UserAuthOperations {
@@ -529,11 +548,14 @@ export interface Booking {
  */
 export interface Customer {
   id: number;
-  email: string;
   prenom: string;
   nom: string;
   telephone?: string | null;
   stripeCustomerId?: string | null;
+  /**
+   * Date à laquelle le client a défini son mot de passe.
+   */
+  compteActiveLe?: string | null;
   newsletter?: boolean | null;
   notes?: string | null;
   bookings?: {
@@ -543,6 +565,22 @@ export interface Customer {
   };
   updatedAt: string;
   createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'customers';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -832,10 +870,15 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null);
   globalSlug?: string | null;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
+      };
   updatedAt: string;
   createdAt: string;
 }
@@ -845,10 +888,15 @@ export interface PayloadLockedDocument {
  */
 export interface PayloadPreference {
   id: number;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
+      };
   key?: string | null;
   value?:
     | {
@@ -1030,16 +1078,30 @@ export interface BookingsSelect<T extends boolean = true> {
  * via the `definition` "customers_select".
  */
 export interface CustomersSelect<T extends boolean = true> {
-  email?: T;
   prenom?: T;
   nom?: T;
   telephone?: T;
   stripeCustomerId?: T;
+  compteActiveLe?: T;
   newsletter?: T;
   notes?: T;
   bookings?: T;
   updatedAt?: T;
   createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1350,6 +1412,10 @@ export interface SiteSetting {
   googleSiteVerification?: string | null;
   delaiAnnulationJours?: number | null;
   /**
+   * Dans l'application, le tracé se déverrouille ce nombre d'heures avant l'heure de rendez-vous.
+   */
+  ouvertureTraceHeures?: number | null;
+  /**
    * Ex. « Le calendrier 2027 ouvre en février. »
    */
   messageAccueil?: string | null;
@@ -1380,6 +1446,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   metaPixelId?: T;
   googleSiteVerification?: T;
   delaiAnnulationJours?: T;
+  ouvertureTraceHeures?: T;
   messageAccueil?: T;
   updatedAt?: T;
   createdAt?: T;

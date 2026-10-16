@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload"
 
+import { adminOnly } from "../lib/access"
+
 /** Inscrits à la lettre d'information. Création publique, lecture admin. */
 export const Subscribers: CollectionConfig = {
   slug: "subscribers",
@@ -10,9 +12,9 @@ export const Subscribers: CollectionConfig = {
   },
   labels: { singular: "Abonné", plural: "Abonnés (lettre d'information)" },
   access: {
-    read: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    read: adminOnly,
+    update: adminOnly,
+    delete: adminOnly,
   },
   defaultSort: "-createdAt",
   fields: [
