@@ -19,6 +19,8 @@ export function AdventuresExplorer({ adventures }: { adventures: Adventure[] }) 
   const [api, setApi] = useState<CarouselApi>()
   const [index, setIndex] = useState(0)
   const [zoomed, setZoomed] = useState(false)
+  // Troisième niveau : la carte cadre le parcours sélectionné et affiche son tracé.
+  const [focused, setFocused] = useState(false)
 
   // Le carrousel est la source de vérité de la sélection ; la carte s'y aligne.
   useEffect(() => {
@@ -31,17 +33,30 @@ export function AdventuresExplorer({ adventures }: { adventures: Adventure[] }) 
     }
   }, [api])
 
+  // Un clic sur un numéro zoome sur le parcours ; un second clic sur le même
+  // numéro revient à la vue régionale.
   const selectFromMap = useCallback(
     (slug: string) => {
       const next = adventures.findIndex((a) => a.slug === slug)
       if (next < 0) return
+      if (focused && next === index) {
+        setFocused(false)
+        return
+      }
       setIndex(next)
       api?.scrollTo(next)
+      setFocused(true)
     },
-    [adventures, api],
+    [adventures, api, focused, index],
   )
 
+  const back = useCallback(() => {
+    if (focused) setFocused(false)
+    else setZoomed(false)
+  }, [focused])
+
   const selected = zoomed ? (adventures[index]?.slug ?? null) : null
+  const current = adventures[index]
 
   return (
     <div className="border-t border-border">
@@ -50,16 +65,22 @@ export function AdventuresExplorer({ adventures }: { adventures: Adventure[] }) 
         <p className="label text-muted-foreground">
           France
           <span className="mx-2 text-foreground">/</span>
-          <span className={zoomed ? "text-foreground" : ""}>Normandie</span>
+          <span className={zoomed && !focused ? "text-foreground" : ""}>Normandie</span>
+          {zoomed && focused && current && (
+            <>
+              <span className="mx-2 text-foreground">/</span>
+              <span className="text-foreground">{current.title}</span>
+            </>
+          )}
         </p>
         <button
           type="button"
-          onClick={() => setZoomed(false)}
+          onClick={back}
           disabled={!zoomed}
           className="inline-flex items-center gap-2 label text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
         >
           <ArrowLeft className="size-3.5" />
-          Vue France
+          {focused ? "Vue Normandie" : "Vue France"}
         </button>
       </div>
 
@@ -69,6 +90,7 @@ export function AdventuresExplorer({ adventures }: { adventures: Adventure[] }) 
             adventures={adventures}
             selectedSlug={selected}
             zoomed={zoomed}
+            focusSlug={focused ? selected : null}
             onSelect={selectFromMap}
             onZoom={() => setZoomed(true)}
             className="aspect-square w-full sm:aspect-[5/4] lg:aspect-auto lg:h-full lg:min-h-[640px]"
@@ -152,12 +174,23 @@ export function AdventuresExplorer({ adventures }: { adventures: Adventure[] }) 
                 </div>
               </div>
 
-              <p className="mt-4 label-sm text-muted-foreground">
-                <span className="sm:hidden">Glissez les fiches</span>
-                <span className="hidden sm:inline">
-                  Glissez les fiches ou cliquez un point sur la carte
-                </span>
-              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="label-sm text-muted-foreground">
+                  <span className="sm:hidden">Glissez les fiches</span>
+                  <span className="hidden sm:inline">
+                    {focused
+                      ? "Tirets : à pied. Trait plein : sur l'eau."
+                      : "Glissez les fiches ou cliquez un numéro pour voir le tracé"}
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setFocused((f) => !f)}
+                  className="label-sm link-underline text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {focused ? "Masquer le tracé" : "Voir le tracé"}
+                </button>
+              </div>
             </Carousel>
           )}
         </div>

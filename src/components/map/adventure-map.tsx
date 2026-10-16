@@ -8,6 +8,7 @@ import {
   REGIONS,
   SPOT_XY,
 } from "@/lib/france-map"
+import { schematicTrace, toPath } from "@/lib/trace"
 import type { Adventure } from "@/lib/types"
 
 const NORMANDIE_CODE = "28"
@@ -55,10 +56,31 @@ function useNormandieView() {
   }, [])
 }
 
+type View = { scale: number; tx: number; ty: number }
+
+/** Cadrage sur le tracé d'un parcours : la boucle occupe environ la moitié du cadre. */
+function useFocusView(adventure: Adventure | undefined, regionScale: number): View | null {
+  return useMemo(() => {
+    if (!adventure) return null
+    const { bbox } = schematicTrace(adventure)
+    const w = bbox.x1 - bbox.x0
+    const h = bbox.y1 - bbox.y0
+    const scale = Math.min(
+      90,
+      Math.max(regionScale * 3, Math.min(MAP_SIZE.width / w, MAP_SIZE.height / h) * 0.55),
+    )
+    const cx = (bbox.x0 + bbox.x1) / 2
+    const cy = (bbox.y0 + bbox.y1) / 2
+    return { scale, tx: MAP_SIZE.width / 2 - scale * cx, ty: MAP_SIZE.height / 2 - scale * cy }
+  }, [adventure, regionScale])
+}
+
 type Props = {
   adventures: Adventure[]
   selectedSlug: string | null
   zoomed: boolean
+  /** Parcours sur lequel la carte est zoomée, tracé affiché. */
+  focusSlug?: string | null
   onSelect: (slug: string) => void
   onZoom: () => void
   className?: string
@@ -68,24 +90,28 @@ export function AdventureMap({
   adventures,
   selectedSlug,
   zoomed,
+  focusSlug = null,
   onSelect,
   onZoom,
   className,
 }: Props) {
   const uid = useId().replace(/:/g, "")
   const { normandie, scale, tx, ty } = useNormandieView()
+  const focused = zoomed ? adventures.find((a) => a.slug === focusSlug) : undefined
+  const focusView = useFocusView(focused, scale)
+  const trace = focused ? schematicTrace(focused) : null
 
-  const groupTransform = zoomed
-    ? `translate(${tx}px, ${ty}px) scale(${scale})`
-    : "translate(0px, 0px) scale(1)"
+  const view: View = focusView ?? (zoomed ? { scale, tx, ty } : { scale: 1, tx: 0, ty: 0 })
+  const groupTransform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`
   const transition = `transform ${DURATION}ms ${EASE}, opacity ${DURATION}ms ${EASE}`
 
-  /** Position écran d'un point, en unités du viewBox, quel que soit le zoom. */
-  const project = (spotId: string, nudge?: [number, number]): [number, number] => {
-    const [x, y] = SPOT_XY[spotId] ?? [0, 0]
-    if (!zoomed) return [x, y]
-    return [x * scale + tx + (nudge?.[0] ?? 0), y * scale + ty + (nudge?.[1] ?? 0)]
-  }
+  /** Position écran d'un point du fond, en unités du viewBox, quel que soit le zoom. */
+  const projectPoint = ([x, y]: [number, number], nudge?: [number, number]): [number, number] => [
+    x * view.scale + view.tx + (nudge?.[0] ?? 0),
+    y * view.scale + view.ty + (nudge?.[1] ?? 0),
+  ]
+  const project = (spotId: string, nudge?: [number, number]) =>
+    projectPoint(SPOT_XY[spotId] ?? [0, 0], zoomed ? nudge : undefined)
 
   return (
     <div className={cn("relative isolate select-none overflow-hidden", className)}>
@@ -171,6 +197,24 @@ export function AdventureMap({
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
             />
+
+            {/* ---- Tracé du parcours : à pied en tirets, sur l'eau en trait plein ---- */}
+            {trace && (
+              <g
+                key={focused?.slug}
+                className="map-trace pointer-events-none fill-none stroke-foreground"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              >
+                <path
+                  d={toPath(trace.hike)}
+                  strokeWidth={2}
+                  strokeDasharray="6 5"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <path d={toPath(trace.canoe)} strokeWidth={3} vectorEffect="non-scaling-stroke" />
+              </g>
+            )}
           </g>
 
           {/* ---- Zone cliquable + cartouche de légende, vue France ---- */}
@@ -235,6 +279,43 @@ export function AdventureMap({
             </g>
           </g>
 
+          {/* ---- Légende du tracé : taille constante, posée sur chaque segment ---- */}
+          {trace && focused && (
+            <g key={`legend-${focused.slug}`} className="pointer-events-none">
+              {[
+                { at: trace.hikeLabel, label: `Randonnée — ${focused.stats.randoKm} km` },
+                { at: trace.canoeLabel, label: `Canoë — ${focused.stats.canoeKm} km` },
+              ].map(({ at, label }) => {
+                const [x, y] = projectPoint(at)
+                return (
+                  <g
+                    key={label}
+                    className="map-marker"
+                    style={{
+                      transform: `translate(${x}px, ${y}px) scale(var(--marker-scale))`,
+                      transformOrigin: "0 0",
+                      transition,
+                    }}
+                  >
+                    <text
+                      y={-14}
+                      textAnchor="middle"
+                      fontSize={14}
+                      letterSpacing={2}
+                      paintOrder="stroke"
+                      stroke="var(--background)"
+                      strokeWidth={5}
+                      strokeLinejoin="round"
+                      className="fill-foreground font-mono uppercase"
+                    >
+                      {label}
+                    </text>
+                  </g>
+                )
+              })}
+            </g>
+          )}
+
           {/* ---- Points de départ : taille constante, position animée ---- */}
           <g
             style={{ opacity: zoomed ? 1 : 0, transition }}
@@ -244,6 +325,7 @@ export function AdventureMap({
               const meta = MARKER_META[adventure.spotId] ?? DEFAULT_META
               const [x, y] = project(adventure.spotId, meta.nudge)
               const active = adventure.slug === selectedSlug
+              const dimmed = Boolean(focused) && adventure.slug !== focused?.slug
 
               return (
                 <g
@@ -251,12 +333,17 @@ export function AdventureMap({
                   style={{
                     transform: `translate(${x}px, ${y}px) scale(var(--marker-scale))`,
                     transformOrigin: "0 0",
+                    opacity: dimmed ? 0 : 1,
                     transition,
                   }}
-                  className="map-marker cursor-pointer outline-none"
+                  className={cn("map-marker cursor-pointer outline-none", dimmed && "pointer-events-none")}
                   role="button"
-                  tabIndex={zoomed ? 0 : -1}
-                  aria-label={`${adventure.title}, ${adventure.commune}`}
+                  tabIndex={zoomed && !dimmed ? 0 : -1}
+                  aria-label={
+                    focused?.slug === adventure.slug
+                      ? `${adventure.title} — revenir à la vue Normandie`
+                      : `${adventure.title}, ${adventure.commune} — zoomer sur le parcours`
+                  }
                   onClick={() => onSelect(adventure.slug)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
