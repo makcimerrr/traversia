@@ -2,9 +2,10 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { CancelForm } from "@/components/booking/cancel-form"
 import { ButtonLink } from "@/components/site/button-link"
 import { Container, Eyebrow, Section } from "@/components/site/section"
-import { getBookingByReference, reconcileCheckoutSession } from "@/lib/bookings"
+import { daysUntil, getBookingByReference, reconcileCheckoutSession } from "@/lib/bookings"
 import { getSettings } from "@/lib/content"
 import { formatDateLong, formatPrice } from "@/lib/format"
 import { siteUrl } from "@/lib/site-url"
@@ -47,7 +48,13 @@ export default async function ReservationPage({ params, searchParams }: PageProp
         .join(", "),
     ],
     ["Montant", formatPrice(booking.montantTotal)],
+    booking.remise > 0 ? [booking.remiseLibelle || "Remise", `− ${formatPrice(booking.remise)}`] : ["", ""],
+    booking.montantCarteCadeau > 0 ? ["Carte cadeau", `− ${formatPrice(booking.montantCarteCadeau)}`] : ["", ""],
+    booking.numeroFacture ? ["Facture", booking.numeroFacture] : ["", ""],
   ].filter(([, v]) => v)
+  const canSelfCancel =
+    (booking.statut === "confirmee" || booking.statut === "demande") &&
+    daysUntil(slot.date) >= settings.delaiAnnulationJours
 
   return (
     <>
@@ -84,12 +91,53 @@ export default async function ReservationPage({ params, searchParams }: PageProp
               <ButtonLink href={`/aventures/${adventure.slug}`} variant="ghost">
                 Revoir la fiche
               </ButtonLink>
+              {(booking.statut === "confirmee" || booking.statut === "remboursee") && (
+                <ButtonLink href={`/reservation/${booking.reference}/facture`} variant="outline" target="_blank">
+                  Facture PDF
+                </ButtonLink>
+              )}
               {adventure.gpx && (
                 <ButtonLink href={adventure.gpx.url} variant="outline">
                   Trace GPX
                 </ButtonLink>
               )}
             </div>
+
+            {booking.statut === "confirmee" && (
+              <figure className="mt-10 flex items-center gap-6 border border-border p-5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/reservation/${booking.reference}/qr`}
+                  alt={`QR code de la réservation ${booking.reference}`}
+                  width={120}
+                  height={120}
+                  className="size-[120px] border border-border"
+                />
+                <figcaption className="text-sm leading-relaxed text-muted-foreground">
+                  <span className="label-sm">Le jour J</span>
+                  <br />
+                  Présentez ce code au guide, sur votre téléphone ou imprimé. Il ouvre cette page.
+                </figcaption>
+              </figure>
+            )}
+
+            {(booking.statut === "confirmee" || booking.statut === "demande") && (
+              <div className="mt-10">
+                <h2 className="label text-muted-foreground">Annuler</h2>
+                {canSelfCancel ? (
+                  <CancelForm reference={booking.reference} delai={settings.delaiAnnulationJours} />
+                ) : (
+                  <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                    Le délai d&apos;annulation gratuite ({settings.delaiAnnulationJours} jours avant la date) est dépassé.
+                    Écrivez-nous à{" "}
+                    <Link href={`mailto:${settings.email}`} className="link-underline">
+                      {settings.email}
+                    </Link>{" "}
+                    en indiquant votre référence : un avoir d&apos;un an vous sera proposé.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {booking.statut === "confirmee" || booking.statut === "demande" ? (
@@ -125,13 +173,6 @@ export default async function ReservationPage({ params, searchParams }: PageProp
                   </dl>
                 </>
               )}
-              <p className="mt-8 text-sm leading-relaxed text-muted-foreground">
-                Annulation gratuite jusqu&apos;à {settings.delaiAnnulationJours} jours avant la date, en écrivant à{" "}
-                <Link href={`mailto:${settings.email}`} className="link-underline">
-                  {settings.email}
-                </Link>{" "}
-                avec votre référence.
-              </p>
             </div>
           ) : null}
         </Container>

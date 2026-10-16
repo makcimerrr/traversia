@@ -242,9 +242,29 @@ export type Booking = {
   remise: number
   remiseLibelle: string
   montantTotal: number
+  montantCarteCadeau: number
+  numeroFacture?: string
+  factureEmiseLe?: string
   payeLe?: string
   moyenPaiement?: string
   stripeSessionId?: string
   annuleLe?: string
   montantRembourse?: number
 }
+
+export type GiftCardView = {
+  id: string
+  code: string
+  statut: "en_attente" | "active" | "epuisee" | "expiree" | "annulee"
+  montantInitial: number
+  solde: number
+  acheteurNom: string
+  acheteurEmail: string
+  beneficiaireNom: string
+  beneficiaireEmail?: string
+  messagePerso?: string
+  /** AAAA-MM-JJ */
+  expireLe?: string
+}
+
+export const GIFT_CARD_AMOUNTS = [60, 90, 120, 180, 250] as const

@@ -3,7 +3,7 @@ import "server-only"
 import { Resend } from "resend"
 
 import { formatDateLong, formatPrice } from "./format"
-import type { Booking, SiteSettings } from "./types"
+import type { Booking, GiftCardView, SiteSettings } from "./types"
 
 /**
  * Envoi d'e-mails via Resend (clé RESEND_API_KEY injectée par le
@@ -90,7 +90,8 @@ export function bookingConfirmationEmail(
     `C'est réservé, ${booking.prenom}.`,
     p(`Votre place sur <strong>${escape(adventure.title)}</strong> est confirmée. Voici l'essentiel ; tout est aussi sur votre page de réservation.`) +
       `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 20px">${rows.map(([l, v]) => row(l, v)).join("")}</table>` +
-      p(`<a href="${url}" style="color:#111">Votre réservation et vos documents</a>${gpx ? ` · <a href="${gpx}" style="color:#111">Trace GPX</a>` : ""}`) +
+      p(`<a href="${url}" style="color:#111">Votre réservation</a> · <a href="${url}/facture" style="color:#111">Facture</a> · <a href="${url}/qr" style="color:#111">QR code</a>${gpx ? ` · <a href="${gpx}" style="color:#111">Trace GPX</a>` : ""}`) +
+      `<p style="margin:0 0 20px"><img src="${url}/qr" width="120" height="120" alt="QR code de la réservation" style="border:1px solid #ddd"></p>` +
       h2("Horaires") +
       ul(adventure.programme.map((s) => `${s.time} — ${s.title}`)) +
       h2("À apporter") +
@@ -107,6 +108,7 @@ export function bookingConfirmationEmail(
     text,
     "",
     `Votre réservation : ${url}`,
+    `Facture : ${url}/facture`,
     gpx ? `Trace GPX : ${gpx}` : "",
     "",
     "Horaires",
@@ -166,5 +168,63 @@ export function adminBookingEmail(booking: Booking, siteUrl: string): { subject:
     subject: `${booking.statut === "confirmee" ? "Réservation" : "Demande"} ${booking.reference} — ${booking.adventure.title}`,
     html,
     text: `${text}\n${extra.map(([l, v]) => `${l} : ${v}`).join("\n")}\n${booking.message ?? ""}`,
+  }
+}
+
+export function bookingCancellationEmail(
+  booking: Booking,
+  settings: SiteSettings,
+  siteUrl: string,
+  motif: string,
+  rembourse: number,
+): { subject: string; html: string; text: string } {
+  const { rows, text } = recap(booking)
+  const refundLine =
+    rembourse > 0
+      ? `Le remboursement de ${formatPrice(rembourse)} est engagé ; il apparaît sur votre compte sous cinq à dix jours ouvrés${booking.montantCarteCadeau > 0 ? ", et votre carte cadeau est recréditée" : ""}.`
+      : "Aucun paiement n'avait été encaissé."
+  const html = layout(
+    `Réservation annulée, ${booking.prenom}.`,
+    p(`Votre réservation <strong>${escape(booking.reference)}</strong> sur ${escape(booking.adventure.title)} est annulée.`) +
+      p(`<em>${escape(motif)}</em>`) +
+      p(refundLine) +
+      `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 20px">${rows.map(([l, v]) => row(l, v)).join("")}</table>` +
+      p(`Envie de repartir ? <a href="${siteUrl}/aventures" style="color:#111">Toutes les dates</a>. Une question : <a href="mailto:${settings.email}" style="color:#111">${settings.email}</a>.`),
+  )
+  return {
+    subject: `Réservation ${booking.reference} annulée — ${booking.adventure.title}`,
+    html,
+    text: `Réservation annulée, ${booking.prenom}.\n\n${motif}\n${refundLine}\n\n${text}\n\nContact : ${settings.email}`,
+  }
+}
+
+export function giftCardEmail(card: GiftCardView, siteUrl: string): { subject: string; html: string; text: string } {
+  const to = card.beneficiaireNom || card.acheteurNom
+  const html = layout(
+    `Une aventure vous attend, ${to}.`,
+    p(`${escape(card.acheteurNom)} vous offre une carte cadeau Traversia de <strong>${formatPrice(card.montantInitial)}</strong>, valable un an sur tous nos packs aventure randonnée &amp; canoë.`) +
+      (card.messagePerso ? `<blockquote style="margin:0 0 20px;padding-left:16px;border-left:2px solid #111;font-style:italic">${escape(card.messagePerso)}</blockquote>` : "") +
+      `<p style="margin:0 0 20px;padding:18px;border:1px solid #111;text-align:center;font-family:monospace;font-size:22px;letter-spacing:0.15em">${escape(card.code)}</p>` +
+      p(`Pour l'utiliser : choisissez un parcours et une date sur <a href="${siteUrl}/aventures" style="color:#111">traversia.fr</a>, puis saisissez ce code au moment de réserver. Le solde restant reste utilisable jusqu'au ${card.expireLe ? formatDateLong(card.expireLe) : "dans un an"}.`),
+  )
+  return {
+    subject: `${card.acheteurNom} vous offre une aventure Traversia`,
+    html,
+    text: `${card.acheteurNom} vous offre une carte cadeau Traversia de ${formatPrice(card.montantInitial)}.\n\nCode : ${card.code}\n\n${card.messagePerso ?? ""}\n\nÀ utiliser sur ${siteUrl}/aventures au moment de réserver.`,
+  }
+}
+
+export function giftCardReceiptEmail(card: GiftCardView, siteUrl: string): { subject: string; html: string; text: string } {
+  const sentTo = card.beneficiaireEmail ? `La carte a été envoyée à ${escape(card.beneficiaireEmail)}.` : "Vous trouverez le code ci-dessous, à transmettre vous-même."
+  const html = layout(
+    `Merci, ${card.acheteurNom}.`,
+    p(`Votre carte cadeau de <strong>${formatPrice(card.montantInitial)}</strong>${card.beneficiaireNom ? ` pour ${escape(card.beneficiaireNom)}` : ""} est réglée. ${sentTo}`) +
+      `<p style="margin:0 0 20px;padding:18px;border:1px solid #111;text-align:center;font-family:monospace;font-size:22px;letter-spacing:0.15em">${escape(card.code)}</p>` +
+      p(`Valable un an, sur tous les parcours : <a href="${siteUrl}/aventures" style="color:#111">traversia.fr/aventures</a>.`),
+  )
+  return {
+    subject: `Votre carte cadeau Traversia — ${card.code}`,
+    html,
+    text: `Merci, ${card.acheteurNom}. Carte cadeau de ${formatPrice(card.montantInitial)} réglée.\nCode : ${card.code}\n${sentTo}`,
   }
 }

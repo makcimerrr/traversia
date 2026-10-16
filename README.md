@@ -90,6 +90,26 @@ Le stock d'un créneau (`placesReservees`) est recalculé à chaque changement
 de réservation ; les statuts « en attente », « demande » et « confirmée »
 occupent des places.
 
+### Après la réservation
+
+- `/reservation/[référence]` : récapitulatif, horaires, matériel, infos
+  pratiques, trace GPX, QR code (`/qr`) et facture PDF (`/facture`,
+  numérotée `FAC-AAAA-NNNN` à la confirmation).
+- Annulation par le client depuis cette page, gratuite et remboursée via
+  Stripe jusqu'au délai fixé dans les paramètres du site ; au-delà, il est
+  invité à écrire.
+- Annulation par l'équipe : bouton « Annuler et rembourser » dans la fiche
+  réservation de l'administration (endpoint `POST /api/bookings/:id/annuler`).
+
+### Codes promo et cartes cadeaux
+
+Les codes promotionnels (pourcentage ou montant, bornes de dates, nombre
+d'utilisations, restriction par aventure) et les cartes cadeaux se saisissent
+dans le même champ du tunnel. Une carte cadeau s'achète sur
+`/cartes-cadeaux` (Stripe), arrive par e-mail avec un code `CADEAU-XXXX-XXXX`
+et se consomme en une ou plusieurs fois ; le solde est recrédité en cas
+d'annulation.
+
 ## Médias
 
 Les fichiers vont sur Vercel Blob, via `BLOB_READ_WRITE_TOKEN` (injecté
@@ -106,8 +126,8 @@ src/
                      partenaires, FAQ, contact, pages éditoriales /[slug]
     (payload)/       Administration et API Payload (fichiers générés, à ne pas modifier)
   collections/       Schémas Payload : Adventures, Slots (créneaux), Bookings,
-                     Customers, Regions, Partners, Faqs, Reviews, Pages,
-                     Messages, Media, Users
+                     Customers, PromoCodes, GiftCards, Regions, Partners,
+                     Faqs, Reviews, Pages, Messages, Media, Users
   globals/           SiteSettings : coordonnées, informations légales
   components/
     adventures/      Fiche parcours, carrousel, jauge de difficulté, cartouche de mesures
@@ -126,6 +146,10 @@ src/
     bookings-stock.ts Recalcul du stock d'un créneau
     stripe.ts        Client Stripe
     email.ts         Envoi Resend et gabarits d'e-mails
+    discounts.ts     Résolution d'un code promo ou d'une carte cadeau
+    gift-cards.ts    Achat et activation des cartes cadeaux
+    invoice.ts       Facture PDF (pdf-lib)
+    qr.ts            QR code de réservation
     actions/         Server actions (contact, réservation)
   app/api/stripe/webhook  Webhook Stripe
     france-map.ts    Tracés SVG générés — ne pas éditer à la main

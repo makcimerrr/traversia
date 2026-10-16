@@ -1,6 +1,7 @@
 import type Stripe from "stripe"
 
 import { confirmBooking, expireBooking, markRefunded } from "@/lib/bookings"
+import { completeGiftCard, expireGiftCard } from "@/lib/gift-cards"
 import { siteUrlFromEnv } from "@/lib/site-url"
 import { getStripe, stripeEnabled } from "@/lib/stripe"
 
@@ -30,6 +31,11 @@ export async function POST(request: Request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object
+        const paymentIntent = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id
+        if (session.metadata?.kind === "gift" && session.metadata.giftCardId && session.payment_status === "paid") {
+          await completeGiftCard(session.metadata.giftCardId, { sessionId: session.id, paymentIntentId: paymentIntent }, siteUrlFromEnv())
+          break
+        }
         const bookingId = session.metadata?.bookingId
         if (bookingId && session.payment_status === "paid") {
           await confirmBooking(
@@ -45,8 +51,9 @@ export async function POST(request: Request) {
         break
       }
       case "checkout.session.expired": {
-        const bookingId = event.data.object.metadata?.bookingId
-        if (bookingId) await expireBooking(bookingId)
+        const meta = event.data.object.metadata
+        if (meta?.kind === "gift" && meta.giftCardId) await expireGiftCard(meta.giftCardId)
+        else if (meta?.bookingId) await expireBooking(meta.bookingId)
         break
       }
       case "charge.refunded": {

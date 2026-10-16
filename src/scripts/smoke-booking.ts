@@ -71,6 +71,25 @@ try {
   log(`Refus attendu : ${(error as Error).message}`)
 }
 
+// Code promo : −10 % sur une seconde réservation.
+const promoExisting = await payload.find({ collection: "promo-codes", where: { code: { equals: "SMOKE10" } }, limit: 1 })
+const promo = promoExisting.docs[0] ?? (await payload.create({ collection: "promo-codes", data: { code: "SMOKE10", type: "pourcentage", valeur: 10, actif: true, description: "Test −10 %" } }))
+const outcome2 = await createBooking(
+  { slotId: String(slotDoc.id), adultes: 1, enfants: 0, prenom: "Test", nom: "Promo", email: "test-smoke@example.com", telephone: "", message: "", newsletter: false, code: "smoke10" },
+  "http://localhost:3000",
+)
+const booking2 = (await payload.find({ collection: "bookings", where: { reference: { equals: outcome2.reference } }, limit: 1 })).docs[0]
+log(`Réservation ${booking2.reference} — sous-total ${booking2.sousTotal} € — remise ${booking2.remise} € (${booking2.remiseLibelle}) — total ${booking2.montantTotal} €`)
+if (booking2.remise !== Math.round(booking2.sousTotal * 10) / 100) throw new Error("La remise promo est fausse.")
+try {
+  await createBooking({ slotId: String(slotDoc.id), adultes: 1, enfants: 0, prenom: "T", nom: "T", email: "x@example.com", telephone: "", message: "", newsletter: false, code: "INCONNU" }, "http://localhost:3000")
+  throw new Error("Un code inconnu aurait dû être refusé.")
+} catch (error) {
+  log(`Refus attendu : ${(error as Error).message}`)
+}
+await payload.delete({ collection: "bookings", id: booking2.id })
+await payload.delete({ collection: "promo-codes", id: promo.id })
+
 await payload.delete({ collection: "bookings", id: booking.id })
 const released = toSlot(await payload.findByID({ collection: "slots", id: slotDoc.id, depth: 1 }))!
 log(`Stock après suppression : ${released.placesReservees}/${released.places}`)

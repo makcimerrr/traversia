@@ -12,10 +12,12 @@ import { Adventures } from "./collections/Adventures"
 import { Bookings } from "./collections/Bookings"
 import { Customers } from "./collections/Customers"
 import { Faqs } from "./collections/Faqs"
+import { GiftCards } from "./collections/GiftCards"
 import { Media } from "./collections/Media"
 import { Messages } from "./collections/Messages"
 import { Pages } from "./collections/Pages"
 import { Partners } from "./collections/Partners"
+import { PromoCodes } from "./collections/PromoCodes"
 import { Regions } from "./collections/Regions"
 import { Reviews } from "./collections/Reviews"
 import { Slots } from "./collections/Slots"
@@ -50,6 +52,8 @@ export default buildConfig({
     Slots,
     Bookings,
     Customers,
+    PromoCodes,
+    GiftCards,
     Regions,
     Partners,
     Faqs,

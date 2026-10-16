@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useMemo, useState } from "react"
+import { useActionState, useMemo, useState, useTransition } from "react"
 import { Minus, Plus } from "lucide-react"
 
-import { submitBooking, type BookingFormState } from "@/lib/actions/booking"
+import { previewCode, submitBooking, type BookingFormState, type CodePreview } from "@/lib/actions/booking"
 import { formatDateLong, formatPrice } from "@/lib/format"
 import { quote } from "@/lib/pricing"
 import type { Adventure, Slot } from "@/lib/types"
@@ -87,9 +87,40 @@ export function BookingForm({
   const slot = slots.find((s) => s.id === slotId)
   const remaining = slot?.placesRestantes ?? 0
   const maxTotal = Math.min(adventure.maxParticipants, remaining || adventure.maxParticipants)
+  // La remise dépend du créneau et du nombre de participants : l'aperçu est
+  // daté de ces valeurs et recalculé quand elles changent.
+  const [code, setCode] = useState(v.code ?? "")
+  const [preview, setPreview] = useState<(CodePreview & { key: string }) | null>(null)
+  const [checking, startCheck] = useTransition()
+  const keyOf = (s: string, a: number, e: number) => `${s}|${a}|${e}`
+  const runCheck = (s: string, a: number, e: number) => {
+    if (!s || !code.trim()) {
+      setPreview(null)
+      return
+    }
+    startCheck(async () => setPreview({ ...(await previewCode(s, a, e, code)), key: keyOf(s, a, e) }))
+  }
+  const checkCode = () => runCheck(slotId, adultes, enfants)
+  const changeSlot = (s: string) => {
+    setSlotId(s)
+    if (preview?.ok) runCheck(s, adultes, enfants)
+  }
+  const changeAdultes = (a: number) => {
+    setAdultes(a)
+    if (preview?.ok) runCheck(slotId, a, enfants)
+  }
+  const changeEnfants = (e: number) => {
+    setEnfants(e)
+    if (preview?.ok) runCheck(slotId, adultes, e)
+  }
+  const activePreview = preview && preview.key === keyOf(slotId, adultes, enfants) ? preview : null
+
   const q = useMemo(
-    () => (slot ? quote(adventure, slot, adultes, enfants) : null),
-    [adventure, slot, adultes, enfants],
+    () =>
+      slot
+        ? quote(adventure, slot, adultes, enfants, activePreview?.ok ? { montant: activePreview.montant, libelle: activePreview.libelle } : undefined)
+        : null,
+    [adventure, slot, adultes, enfants, activePreview],
   )
   const childrenAllowed = adventure.ageMin <= adventure.ageEnfantMax
 
@@ -137,7 +168,7 @@ export function BookingForm({
                           name="slotId"
                           value={s.id}
                           checked={checked}
-                          onChange={() => setSlotId(s.id)}
+                          onChange={() => changeSlot(s.id)}
                           className="sr-only"
                         />
                         <span
@@ -181,7 +212,7 @@ export function BookingForm({
               value={adultes}
               min={0}
               max={Math.max(0, maxTotal - enfants)}
-              onChange={setAdultes}
+              onChange={changeAdultes}
             />
             {childrenAllowed && (
               <Stepper
@@ -191,7 +222,7 @@ export function BookingForm({
                 value={enfants}
                 min={0}
                 max={Math.max(0, maxTotal - adultes)}
-                onChange={setEnfants}
+                onChange={changeEnfants}
               />
             )}
             {!childrenAllowed && <input type="hidden" name="enfants" value={0} />}
@@ -270,12 +301,50 @@ export function BookingForm({
                   <dd className="font-mono tabular-nums">{formatPrice(line.total)}</dd>
                 </div>
               ))}
+              {q.remise > 0 && (
+                <div className="flex items-baseline justify-between gap-4 py-1.5 text-sm">
+                  <dt className="text-muted-foreground">{q.remiseLibelle}</dt>
+                  <dd className="font-mono tabular-nums">− {formatPrice(q.remise)}</dd>
+                </div>
+              )}
               <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-border pt-4">
                 <dt className="label">Total</dt>
                 <dd className="font-mono text-xl tabular-nums">{formatPrice(q.total)}</dd>
               </div>
             </dl>
           )}
+          <div className="border-t border-border px-5 py-4">
+            <label className="block">
+              <span className="label-sm text-muted-foreground">Code promo ou carte cadeau</span>
+              <span className="mt-2 flex gap-2">
+                <input
+                  name="code"
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value.toUpperCase())
+                    setPreview(null)
+                  }}
+                  onBlur={checkCode}
+                  placeholder="PRINTEMPS10 ou CADEAU-…"
+                  className="w-full border border-border bg-transparent px-3.5 py-2.5 font-mono text-sm uppercase outline-none transition-colors focus:border-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={checkCode}
+                  disabled={checking || !code.trim() || !slot}
+                  className="shrink-0 border border-border px-3.5 label-sm transition-colors hover:border-foreground disabled:opacity-40"
+                >
+                  {checking ? "…" : "Appliquer"}
+                </button>
+              </span>
+            </label>
+            {activePreview && (
+              <p className={cn("mt-2 font-mono text-xs", activePreview.ok ? "text-muted-foreground" : "")}>
+                {activePreview.ok ? `${activePreview.libelle} : − ${formatPrice(activePreview.montant)}` : activePreview.message}
+              </p>
+            )}
+            {error("code")}
+          </div>
           <div className="border-t border-border px-5 py-5">
             <label className="flex items-start gap-3 text-sm">
               <input type="checkbox" name="cgv" className="mt-1 size-3.5 accent-current" />
@@ -302,7 +371,13 @@ export function BookingForm({
               disabled={pending || !slot || (adultes + enfants) < 1}
               className="mt-5 flex w-full items-center justify-center gap-3 border border-foreground bg-foreground px-6 py-4 label text-background transition-colors hover:bg-background hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             >
-              {pending ? "Un instant…" : paymentEnabled ? `Payer ${q ? formatPrice(q.total) : ""}` : "Envoyer la demande"}
+              {pending
+                ? "Un instant…"
+                : q && q.total === 0 && q.remise > 0
+                  ? "Confirmer avec la carte cadeau"
+                  : paymentEnabled
+                    ? `Payer ${q ? formatPrice(q.total) : ""}`
+                    : "Envoyer la demande"}
             </button>
             <p className="mt-3 label-sm text-muted-foreground">
               {paymentEnabled

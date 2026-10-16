@@ -71,6 +71,8 @@ export interface Config {
     slots: Slot;
     bookings: Booking;
     customers: Customer;
+    'promo-codes': PromoCode;
+    'gift-cards': GiftCard;
     regions: Region;
     partners: Partner;
     faqs: Faq;
@@ -93,6 +95,9 @@ export interface Config {
     customers: {
       bookings: 'bookings';
     };
+    'gift-cards': {
+      bookings: 'bookings';
+    };
     regions: {
       adventures: 'adventures';
     };
@@ -105,6 +110,8 @@ export interface Config {
     slots: SlotsSelect<false> | SlotsSelect<true>;
     bookings: BookingsSelect<false> | BookingsSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
+    'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
+    'gift-cards': GiftCardsSelect<false> | GiftCardsSelect<true>;
     regions: RegionsSelect<false> | RegionsSelect<true>;
     partners: PartnersSelect<false> | PartnersSelect<true>;
     faqs: FaqsSelect<false> | FaqsSelect<true>;
@@ -494,6 +501,11 @@ export interface Booking {
   remise?: number | null;
   montantTotal: number;
   remiseLibelle?: string | null;
+  promoCode?: (number | null) | PromoCode;
+  giftCard?: (number | null) | GiftCard;
+  montantCarteCadeau?: number | null;
+  numeroFacture?: string | null;
+  factureEmiseLe?: string | null;
   stripeSessionId?: string | null;
   stripePaymentIntentId?: string | null;
   payeLe?: string | null;
@@ -525,6 +537,80 @@ export interface Customer {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "promo-codes".
+ */
+export interface PromoCode {
+  id: number;
+  /**
+   * Majuscules, sans espaces. Ex. PRINTEMPS10
+   */
+  code: string;
+  actif?: boolean | null;
+  type: 'pourcentage' | 'montant';
+  valeur: number;
+  minimumPanier?: number | null;
+  validDepuis?: string | null;
+  validJusquau?: string | null;
+  /**
+   * Vide : illimité.
+   */
+  usageMax?: number | null;
+  /**
+   * Comptées à la confirmation du paiement.
+   */
+  utilisations?: number | null;
+  /**
+   * Vide : valable sur tout le catalogue.
+   */
+  adventures?: (number | Adventure)[] | null;
+  /**
+   * Ex. Offre de printemps −10 %
+   */
+  description?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gift-cards".
+ */
+export interface GiftCard {
+  id: number;
+  code?: string | null;
+  statut: 'en_attente' | 'active' | 'epuisee' | 'expiree' | 'annulee';
+  montantInitial: number;
+  /**
+   * Vide à la création : égal au montant.
+   */
+  solde?: number | null;
+  /**
+   * Vide : un an après le paiement.
+   */
+  expireLe?: string | null;
+  acheteurNom?: string | null;
+  acheteurEmail?: string | null;
+  beneficiaireNom?: string | null;
+  /**
+   * Si renseigné, la carte lui est envoyée directement.
+   */
+  beneficiaireEmail?: string | null;
+  messagePerso?: string | null;
+  stripeSessionId?: string | null;
+  stripePaymentIntentId?: string | null;
+  payeLe?: string | null;
+  envoyeeLe?: string | null;
+  bookings?: {
+    docs?: (number | Booking)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -643,6 +729,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'customers';
         value: number | Customer;
+      } | null)
+    | ({
+        relationTo: 'promo-codes';
+        value: number | PromoCode;
+      } | null)
+    | ({
+        relationTo: 'gift-cards';
+        value: number | GiftCard;
       } | null)
     | ({
         relationTo: 'regions';
@@ -852,6 +946,11 @@ export interface BookingsSelect<T extends boolean = true> {
   remise?: T;
   montantTotal?: T;
   remiseLibelle?: T;
+  promoCode?: T;
+  giftCard?: T;
+  montantCarteCadeau?: T;
+  numeroFacture?: T;
+  factureEmiseLe?: T;
   stripeSessionId?: T;
   stripePaymentIntentId?: T;
   payeLe?: T;
@@ -878,6 +977,50 @@ export interface CustomersSelect<T extends boolean = true> {
   newsletter?: T;
   notes?: T;
   bookings?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "promo-codes_select".
+ */
+export interface PromoCodesSelect<T extends boolean = true> {
+  code?: T;
+  actif?: T;
+  type?: T;
+  valeur?: T;
+  minimumPanier?: T;
+  validDepuis?: T;
+  validJusquau?: T;
+  usageMax?: T;
+  utilisations?: T;
+  adventures?: T;
+  description?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gift-cards_select".
+ */
+export interface GiftCardsSelect<T extends boolean = true> {
+  code?: T;
+  statut?: T;
+  montantInitial?: T;
+  solde?: T;
+  expireLe?: T;
+  acheteurNom?: T;
+  acheteurEmail?: T;
+  beneficiaireNom?: T;
+  beneficiaireEmail?: T;
+  messagePerso?: T;
+  stripeSessionId?: T;
+  stripePaymentIntentId?: T;
+  payeLe?: T;
+  envoyeeLe?: T;
+  bookings?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

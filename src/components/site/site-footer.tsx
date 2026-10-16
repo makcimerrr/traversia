@@ -19,7 +19,7 @@ const COLUMNS = [
     links: [
       { href: "/aventures", label: "Réserver une sortie" },
       { href: "/contact?motif=groupe", label: "Groupes & entreprises" },
-      { href: "/contact?motif=autre", label: "Cartes cadeaux" },
+      { href: "/cartes-cadeaux", label: "Cartes cadeaux" },
       { href: "/cgv", label: "Conditions de vente" },
       { href: "/confidentialite", label: "Confidentialité" },
       { href: "/mentions-legales", label: "Mentions légales" },

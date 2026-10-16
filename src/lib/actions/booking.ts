@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation"
 
-import { BookingError, createBooking } from "@/lib/bookings"
+import { BookingError, createBooking, previewDiscount } from "@/lib/bookings"
+import { DiscountError } from "@/lib/discounts"
 import { siteUrl } from "@/lib/site-url"
 
 export type BookingFormState = {
@@ -25,7 +26,7 @@ export async function submitBooking(_prev: BookingFormState, formData: FormData)
   if (formData.get("site")) redirect("/")
 
   const values = Object.fromEntries(
-    ["slotId", "adultes", "enfants", "prenom", "nom", "email", "telephone", "message"].map((k) => [
+    ["slotId", "adultes", "enfants", "prenom", "nom", "email", "telephone", "message", "code"].map((k) => [
       k,
       String(formData.get(k) ?? "").trim(),
     ]),
@@ -54,6 +55,7 @@ export async function submitBooking(_prev: BookingFormState, formData: FormData)
         telephone: values.telephone,
         message: values.message,
         newsletter: Boolean(formData.get("newsletter")),
+        code: values.code || undefined,
       },
       await siteUrl(),
     )
@@ -64,4 +66,18 @@ export async function submitBooking(_prev: BookingFormState, formData: FormData)
   }
 
   redirect(outcome.kind === "checkout" ? outcome.url : `/reservation/${outcome.reference}`)
+}
+
+export type CodePreview = { ok: true; libelle: string; montant: number; total: number } | { ok: false; message: string }
+
+/** Vérifie un code promotionnel ou une carte cadeau et renvoie la remise. */
+export async function previewCode(slotId: string, adultes: number, enfants: number, code: string): Promise<CodePreview> {
+  try {
+    const r = await previewDiscount(slotId, INT(String(adultes)), INT(String(enfants)), code)
+    return { ok: true, ...r }
+  } catch (error) {
+    if (error instanceof DiscountError) return { ok: false, message: error.message }
+    console.error("[booking] Vérification du code impossible.", error)
+    return { ok: false, message: "Impossible de vérifier ce code pour l'instant." }
+  }
 }

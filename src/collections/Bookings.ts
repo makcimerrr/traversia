@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload"
 
+import { cancelBookingEndpoint } from "../lib/bookings-admin"
 import { syncSlotStock } from "../lib/bookings-stock"
 import { revalidateAfterChange, revalidateAfterDelete } from "../lib/revalidate"
 import { BOOKING_STATUS } from "../lib/types"
@@ -23,8 +24,14 @@ export const Bookings: CollectionConfig = {
     group: "Réservations",
     useAsTitle: "reference",
     defaultColumns: ["reference", "adventure", "slot", "nbAdultes", "nbEnfants", "montantTotal", "statut"],
-    listSearchableFields: ["reference", "email", "nom", "prenom"],
+    listSearchableFields: ["reference", "email", "nom", "prenom", "numeroFacture"],
+    components: {
+      edit: {
+        beforeDocumentControls: ["@/components/admin/cancel-booking-button#CancelBookingButton"],
+      },
+    },
   },
+  endpoints: [cancelBookingEndpoint],
   labels: { singular: "Réservation", plural: "Réservations" },
   access: {
     read: ({ req }) => Boolean(req.user),
@@ -146,6 +153,21 @@ export const Bookings: CollectionConfig = {
               ],
             },
             { name: "remiseLibelle", type: "text", label: "Libellé de la remise" },
+            {
+              type: "row",
+              fields: [
+                { name: "promoCode", type: "relationship", relationTo: "promo-codes", label: "Code promotionnel" },
+                { name: "giftCard", type: "relationship", relationTo: "gift-cards", label: "Carte cadeau" },
+                { name: "montantCarteCadeau", type: "number", defaultValue: 0, label: "Réglé par carte cadeau (€)" },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "numeroFacture", type: "text", label: "N° de facture", admin: { readOnly: true } },
+                { name: "factureEmiseLe", type: "date", label: "Facture émise le", admin: { readOnly: true } },
+              ],
+            },
           ],
         },
         {
