@@ -8,7 +8,7 @@ import {
   REGIONS,
   SPOT_XY,
 } from "@/lib/france-map"
-import { schematicTrace, toPath } from "@/lib/trace"
+import { placeSteps, schematicTrace, toPath, UNITS_PER_KM } from "@/lib/trace"
 import type { Adventure } from "@/lib/types"
 
 const NORMANDIE_CODE = "28"
@@ -66,8 +66,8 @@ function useFocusView(adventure: Adventure | undefined, regionScale: number): Vi
     const w = bbox.x1 - bbox.x0
     const h = bbox.y1 - bbox.y0
     const scale = Math.min(
-      90,
-      Math.max(regionScale * 3, Math.min(MAP_SIZE.width / w, MAP_SIZE.height / h) * 0.55),
+      140,
+      Math.max(regionScale * 3, Math.min(MAP_SIZE.width / w, MAP_SIZE.height / h) * 0.72),
     )
     const cx = (bbox.x0 + bbox.x1) / 2
     const cy = (bbox.y0 + bbox.y1) / 2
@@ -198,21 +198,39 @@ export function AdventureMap({
               vectorEffect="non-scaling-stroke"
             />
 
-            {/* ---- Tracé du parcours : à pied en tirets, sur l'eau en trait plein ---- */}
+            {/* ---- Carte du parcours : relief, rivière, tracé, repères ---- */}
             {trace && (
-              <g
-                key={focused?.slug}
-                className="map-trace pointer-events-none fill-none stroke-foreground"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              >
-                <path
-                  d={toPath(trace.hike)}
-                  strokeWidth={2}
-                  strokeDasharray="6 5"
-                  vectorEffect="non-scaling-stroke"
-                />
-                <path d={toPath(trace.canoe)} strokeWidth={3} vectorEffect="non-scaling-stroke" />
+              <g key={focused?.slug} className="map-trace pointer-events-none fill-none" strokeLinejoin="round" strokeLinecap="round">
+                {/* Courbes de niveau schématiques autour de la crête. */}
+                {trace.contours.map((ring, i) => (
+                  <path
+                    key={i}
+                    d={toPath(ring, true)}
+                    className="stroke-muted-foreground"
+                    strokeWidth={0.8}
+                    opacity={0.55 - i * 0.08}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+                {/* La rivière, qui continue au-delà du parcours. */}
+                <path d={toPath(trace.river)} className="stroke-muted-foreground" strokeWidth={5} opacity={0.18} vectorEffect="non-scaling-stroke" />
+                <path d={toPath(trace.river)} className="stroke-muted-foreground" strokeWidth={1} opacity={0.6} vectorEffect="non-scaling-stroke" />
+                {/* Le tracé : à pied en tirets, sur l'eau en trait plein. */}
+                <path d={toPath(trace.hike)} className="stroke-foreground" strokeWidth={2} strokeDasharray="6 5" vectorEffect="non-scaling-stroke" />
+                <path d={toPath(trace.canoe)} className="stroke-foreground" strokeWidth={3} vectorEffect="non-scaling-stroke" />
+                {/* Repères kilométriques : un trait perpendiculaire au tracé. */}
+                {trace.ticks.map((tick) => (
+                  <line
+                    key={tick.km}
+                    x1={tick.at[0] - tick.n[0] * 0.18}
+                    y1={tick.at[1] - tick.n[1] * 0.18}
+                    x2={tick.at[0] + tick.n[0] * 0.18}
+                    y2={tick.at[1] + tick.n[1] * 0.18}
+                    className="stroke-foreground"
+                    strokeWidth={1.5}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
               </g>
             )}
           </g>
@@ -279,40 +297,85 @@ export function AdventureMap({
             </g>
           </g>
 
-          {/* ---- Légende du tracé : taille constante, posée sur chaque segment ---- */}
+          {/* ---- Légende du parcours : taille constante, suit le zoom ---- */}
           {trace && focused && (
             <g key={`legend-${focused.slug}`} className="pointer-events-none">
+              {/* Étiquettes des deux segments. */}
               {[
-                { at: trace.hikeLabel, label: `Randonnée — ${focused.stats.randoKm} km` },
-                { at: trace.canoeLabel, label: `Canoë — ${focused.stats.canoeKm} km` },
-              ].map(({ at, label }) => {
+                { at: trace.hikeLabel, label: `Randonnée — ${focused.stats.randoKm} km`, dy: -22 },
+                { at: trace.canoeLabel, label: `Canoë — ${focused.stats.canoeKm} km`, dy: 30 },
+              ].map(({ at, label, dy }) => {
                 const [x, y] = projectPoint(at)
                 return (
-                  <g
-                    key={label}
-                    className="map-marker"
-                    style={{
-                      transform: `translate(${x}px, ${y}px) scale(var(--marker-scale))`,
-                      transformOrigin: "0 0",
-                      transition,
-                    }}
-                  >
-                    <text
-                      y={-14}
-                      textAnchor="middle"
-                      fontSize={14}
-                      letterSpacing={2}
-                      paintOrder="stroke"
-                      stroke="var(--background)"
-                      strokeWidth={5}
-                      strokeLinejoin="round"
-                      className="fill-foreground font-mono uppercase"
-                    >
+                  <g key={label} className="map-marker" style={{ transform: `translate(${x}px, ${y}px) scale(var(--marker-scale))`, transformOrigin: "0 0", transition }}>
+                    <text y={dy} textAnchor="middle" fontSize={14} letterSpacing={2} paintOrder="stroke" stroke="var(--background)" strokeWidth={5} strokeLinejoin="round" className="fill-foreground font-mono uppercase">
                       {label}
                     </text>
                   </g>
                 )
               })}
+
+              {/* Repères kilométriques. */}
+              {trace.ticks.map((tick) => {
+                const [x, y] = projectPoint(tick.at)
+                return (
+                  <g key={tick.km} className="map-marker" style={{ transform: `translate(${x}px, ${y}px) scale(var(--marker-scale))`, transformOrigin: "0 0", transition }}>
+                    <text x={tick.n[0] * 12} y={tick.n[1] * 12 + 3.5} textAnchor="middle" fontSize={9} letterSpacing={0.5} paintOrder="stroke" stroke="var(--background)" strokeWidth={3} className="fill-muted-foreground font-mono">
+                      {tick.km}
+                    </text>
+                  </g>
+                )
+              })}
+
+              {/* Étapes du programme, du départ à l'arrivée. */}
+              {placeSteps(trace, focused.programme).map((step, i, all) => {
+                const [x, y] = projectPoint(step.at)
+                const isStart = i === 0
+                const isEnd = i === all.length - 1
+                const right = x < MAP_SIZE.width / 2
+                return (
+                  <g key={`${step.index}-${step.time}`} className="map-marker" style={{ transform: `translate(${x}px, ${y}px) scale(var(--marker-scale))`, transformOrigin: "0 0", transition }}>
+                    {isStart ? (
+                      <rect x={-5} y={-5} width={10} height={10} className="fill-foreground stroke-background" strokeWidth={2} />
+                    ) : isEnd ? (
+                      <circle r={5} className="fill-none stroke-foreground" strokeWidth={2} />
+                    ) : (
+                      <circle r={4} className="fill-background stroke-foreground" strokeWidth={1.5} />
+                    )}
+                    <text
+                      x={right ? 12 : -12}
+                      y={isStart ? -10 : isEnd ? 20 : 4}
+                      textAnchor={right ? "start" : "end"}
+                      fontSize={11}
+                      letterSpacing={1}
+                      paintOrder="stroke"
+                      stroke="var(--background)"
+                      strokeWidth={4}
+                      strokeLinejoin="round"
+                      className="fill-foreground font-mono uppercase"
+                    >
+                      {step.time} — {step.title}
+                    </text>
+                  </g>
+                )
+              })}
+
+              {/* Échelle et nord. */}
+              <g className="map-marker" style={{ transform: `translate(40px, ${MAP_SIZE.height - 40}px) scale(var(--marker-scale))`, transformOrigin: "0 0" }}>
+                <line x1={0} y1={0} x2={UNITS_PER_KM * view.scale} y2={0} className="stroke-foreground" strokeWidth={1.5} />
+                <line x1={0} y1={-5} x2={0} y2={5} className="stroke-foreground" strokeWidth={1.5} />
+                <line x1={UNITS_PER_KM * view.scale} y1={-5} x2={UNITS_PER_KM * view.scale} y2={5} className="stroke-foreground" strokeWidth={1.5} />
+                <text x={UNITS_PER_KM * view.scale + 10} y={4} fontSize={11} letterSpacing={1} className="fill-foreground font-mono uppercase">
+                  1 km
+                </text>
+              </g>
+              <g className="map-marker" style={{ transform: `translate(${MAP_SIZE.width - 44}px, 48px) scale(var(--marker-scale))`, transformOrigin: "0 0" }}>
+                <line x1={0} y1={14} x2={0} y2={-14} className="stroke-foreground" strokeWidth={1.5} />
+                <path d="M-5,-6 L0,-16 L5,-6" className="fill-none stroke-foreground" strokeWidth={1.5} strokeLinejoin="round" />
+                <text y={30} textAnchor="middle" fontSize={11} letterSpacing={1} className="fill-foreground font-mono">
+                  N
+                </text>
+              </g>
             </g>
           )}
 
@@ -325,7 +388,8 @@ export function AdventureMap({
               const meta = MARKER_META[adventure.spotId] ?? DEFAULT_META
               const [x, y] = project(adventure.spotId, meta.nudge)
               const active = adventure.slug === selectedSlug
-              const dimmed = Boolean(focused) && adventure.slug !== focused?.slug
+              // Au niveau du parcours, le carré de départ remplace les numéros.
+              const dimmed = Boolean(focused)
 
               return (
                 <g
