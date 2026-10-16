@@ -179,8 +179,8 @@ export function AdventuresExplorer({ adventures }: { adventures: Adventure[] }) 
                   <span className="sm:hidden">Glissez les fiches</span>
                   <span className="hidden sm:inline">
                     {focused
-                      ? "Tirets : à pied. Trait plein : sur l'eau. Fond de carte OpenStreetMap."
-                      : "Glissez les fiches ou cliquez un numéro pour voir le parcours sur la carte"}
+                      ? "Tirets : à pied. Trait plein : sur l'eau."
+                      : "Glissez les fiches ou cliquez un numéro pour voir le tracé"}
                   </span>
                 </p>
                 <button

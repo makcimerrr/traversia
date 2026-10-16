@@ -9,7 +9,6 @@ import {
   SPOT_XY,
 } from "@/lib/france-map"
 import { placeSteps, schematicTrace, toPath, UNITS_PER_KM } from "@/lib/trace"
-import { ParcoursMap } from "./parcours-map"
 import type { Adventure } from "@/lib/types"
 
 const NORMANDIE_CODE = "28"
@@ -114,18 +113,9 @@ export function AdventureMap({
   const project = (spotId: string, nudge?: [number, number]) =>
     projectPoint(SPOT_XY[spotId] ?? [0, 0], zoomed ? nudge : undefined)
 
-  const hasGeo = focused?.rendezVous.lat !== undefined && focused?.rendezVous.lng !== undefined
-
   return (
     <div className={cn("relative isolate select-none overflow-hidden", className)}>
       <div className="pointer-events-none absolute inset-0 graph-paper" aria-hidden />
-
-      {/* Fond de carte réel, par-dessus la carte SVG, une fois le zoom parcours engagé. */}
-      {focused && hasGeo && (
-        <div key={focused.slug} className="map-real absolute inset-0 z-10" style={{ animation: `map-real-in ${DURATION}ms ${EASE} both` }}>
-          <ParcoursMap adventure={focused} className="h-full w-full" />
-        </div>
-      )}
 
       <svg
         viewBox={`0 0 ${MAP_SIZE.width} ${MAP_SIZE.height}`}

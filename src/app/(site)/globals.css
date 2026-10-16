@@ -181,54 +181,6 @@
     @apply decoration-foreground;
   }
 
-  /* Fond de carte réel (Leaflet) : tuiles passées en monochrome, étapes typographiées. */
-  .parcours-map {
-    background: var(--background);
-  }
-  .parcours-map .leaflet-tile-pane {
-    filter: grayscale(1) contrast(1.08) brightness(1.02);
-  }
-  .parcours-map .leaflet-control-attribution,
-  .parcours-map .leaflet-control-scale-line {
-    @apply border border-border bg-background font-mono text-[10px] text-muted-foreground;
-    box-shadow: none;
-  }
-  .parcours-map .leaflet-control-attribution a {
-    @apply text-muted-foreground;
-  }
-  .parcours-map .leaflet-bar {
-    @apply border border-border;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .parcours-map .leaflet-bar a {
-    @apply border-b border-border bg-background font-mono text-foreground;
-    border-radius: 0;
-  }
-  .parcours-map .leaflet-bar a:last-child {
-    border-bottom: 0;
-  }
-  .parcours-step {
-    @apply flex items-center gap-2 whitespace-nowrap;
-    width: 0;
-    height: 0;
-  }
-  .parcours-step__dot {
-    @apply block size-2.5 shrink-0 -translate-x-1/2 -translate-y-1/2 border-2 border-foreground bg-background;
-  }
-  .parcours-step__dot--start {
-    @apply bg-foreground;
-  }
-  .parcours-step__dot--end {
-    @apply rounded-full;
-  }
-  .parcours-step__label {
-    @apply -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.12em] text-foreground;
-    paint-order: stroke;
-    -webkit-text-stroke: 3px var(--background);
-    text-shadow: 0 0 2px var(--background);
-  }
-
   /* Texte riche des pages éditoriales (Payload Lexical ou démo). */
   .prose {
     @apply max-w-2xl text-sm leading-relaxed text-muted-foreground;
@@ -259,18 +211,6 @@
   }
   .prose blockquote {
     @apply mt-6 border-l border-foreground pl-5 font-display text-xl italic text-foreground;
-  }
-}
-
-@keyframes map-real-in {
-  from {
-    opacity: 0;
-  }
-  60% {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 

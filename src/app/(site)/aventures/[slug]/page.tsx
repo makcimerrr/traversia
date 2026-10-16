@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { DifficultyMeter } from "@/components/adventures/difficulty-meter"
 import { Gallery } from "@/components/adventures/gallery"
-import { ParcoursMap } from "@/components/map/parcours-map"
 import { Reviews } from "@/components/adventures/reviews"
 import { StatGrid } from "@/components/adventures/stat-grid"
 import { UpcomingSlots } from "@/components/adventures/upcoming-slots"
@@ -297,18 +296,6 @@ export default async function AdventurePage({ params }: PageProps<"/aventures/[s
           </div>
         </Container>
       </Section>
-
-      {/* ------------------------------- Carte ------------------------------- */}
-      {rdv.lat !== undefined && rdv.lng !== undefined && (
-        <Section>
-          <figure className="relative">
-            <ParcoursMap adventure={adventure} className="h-[420px] sm:h-[520px]" />
-            <figcaption className="pointer-events-none absolute left-4 top-4 z-[500] border border-border bg-background px-3 py-2 label-sm text-muted-foreground sm:left-6">
-              Tirets : à pied — Trait plein : sur l&apos;eau
-            </figcaption>
-          </figure>
-        </Section>
-      )}
 
       {/* ------------------------------ Pratique ----------------------------- */}
       <Section>
