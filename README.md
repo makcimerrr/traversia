@@ -61,6 +61,35 @@ Dès que la base et `PAYLOAD_SECRET` sont présents, `getAdventures()`
 lit la collection au lieu du fichier de démo. Si la base est injoignable, le
 site retombe sur le contenu de démonstration plutôt que de tomber en erreur.
 
+## Réservation et paiement
+
+Le tunnel (`/aventures/[slug]/reserver`) crée une réservation dans Payload
+puis redirige vers Stripe Checkout (carte, Apple Pay, Google Pay). Le
+webhook `/api/stripe/webhook` confirme la réservation, envoie l'e-mail de
+confirmation (Resend) et libère les places si la session expire. La page
+`/reservation/[référence]` vérifie elle-même la session au retour de Stripe,
+sans attendre le webhook.
+
+Les clés viennent du Marketplace Vercel :
+
+```bash
+vercel integration add stripe
+vercel integration add resend/resend-email
+vercel env pull .env
+```
+
+Le secret du webhook (`STRIPE_WEBHOOK_SECRET`) se crée dans le tableau de
+bord Stripe. En local, `stripe listen --forward-to localhost:3000/api/stripe/webhook`
+fournit un secret de test.
+
+Sans `STRIPE_SECRET_KEY`, le tunnel fonctionne en mode « demande » : la
+réservation est enregistrée et confirmée à la main dans l'administration.
+`pnpm smoke:booking` rejoue ce parcours de bout en bout sur la base.
+
+Le stock d'un créneau (`placesReservees`) est recalculé à chaque changement
+de réservation ; les statuts « en attente », « demande » et « confirmée »
+occupent des places.
+
 ## Médias
 
 Les fichiers vont sur Vercel Blob, via `BLOB_READ_WRITE_TOKEN` (injecté
@@ -76,8 +105,9 @@ src/
     (site)/          Pages publiques — accueil, aventures, concept, à propos,
                      partenaires, FAQ, contact, pages éditoriales /[slug]
     (payload)/       Administration et API Payload (fichiers générés, à ne pas modifier)
-  collections/       Schémas Payload : Adventures, Slots (créneaux), Regions,
-                     Partners, Faqs, Reviews, Pages, Messages, Media, Users
+  collections/       Schémas Payload : Adventures, Slots (créneaux), Bookings,
+                     Customers, Regions, Partners, Faqs, Reviews, Pages,
+                     Messages, Media, Users
   globals/           SiteSettings : coordonnées, informations légales
   components/
     adventures/      Fiche parcours, carrousel, jauge de difficulté, cartouche de mesures
@@ -91,7 +121,13 @@ src/
     payload.ts       Accès Payload partagé et bascule démo
     revalidate.ts    Crochets d'invalidation du cache après édition admin
     format.ts        Dates et prix en français
-    actions/         Server actions (formulaire de contact)
+    pricing.ts       Devis d'une réservation (adultes, enfants, remises)
+    bookings.ts      Service de réservation : création, confirmation, expiration
+    bookings-stock.ts Recalcul du stock d'un créneau
+    stripe.ts        Client Stripe
+    email.ts         Envoi Resend et gabarits d'e-mails
+    actions/         Server actions (contact, réservation)
+  app/api/stripe/webhook  Webhook Stripe
     france-map.ts    Tracés SVG générés — ne pas éditer à la main
     types.ts         Types du domaine
   scripts/seed.ts    Injection du contenu de démonstration dans Payload

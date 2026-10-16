@@ -206,3 +206,45 @@ export const MESSAGE_MOTIFS = [
 ] as const
 
 export type MessageMotif = (typeof MESSAGE_MOTIFS)[number]["value"]
+
+export const BOOKING_STATUS = [
+  { label: "En attente de paiement", value: "en_attente" },
+  { label: "Demande à confirmer", value: "demande" },
+  { label: "Confirmée", value: "confirmee" },
+  { label: "Annulée", value: "annulee" },
+  { label: "Remboursée", value: "remboursee" },
+] as const
+
+export type BookingStatus = (typeof BOOKING_STATUS)[number]["value"]
+
+export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = Object.fromEntries(
+  BOOKING_STATUS.map((s) => [s.value, s.label]),
+) as Record<BookingStatus, string>
+
+/** Une réservation telle que vue par le client (page de confirmation, e-mails). */
+export type Booking = {
+  id: string
+  reference: string
+  statut: BookingStatus
+  createdAt: string
+  adventure: Adventure
+  slot: Slot
+  nbAdultes: number
+  nbEnfants: number
+  prenom: string
+  nom: string
+  email: string
+  telephone: string
+  message: string
+  prixAdulte: number
+  prixEnfant?: number
+  sousTotal: number
+  remise: number
+  remiseLibelle: string
+  montantTotal: number
+  payeLe?: string
+  moyenPaiement?: string
+  stripeSessionId?: string
+  annuleLe?: string
+  montantRembourse?: number
+}

@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     adventures: Adventure;
     slots: Slot;
+    bookings: Booking;
+    customers: Customer;
     regions: Region;
     partners: Partner;
     faqs: Faq;
@@ -88,6 +90,9 @@ export interface Config {
       faqs: 'faqs';
       reviews: 'reviews';
     };
+    customers: {
+      bookings: 'bookings';
+    };
     regions: {
       adventures: 'adventures';
     };
@@ -98,6 +103,8 @@ export interface Config {
   collectionsSelect: {
     adventures: AdventuresSelect<false> | AdventuresSelect<true>;
     slots: SlotsSelect<false> | SlotsSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
     regions: RegionsSelect<false> | RegionsSelect<true>;
     partners: PartnersSelect<false> | PartnersSelect<true>;
     faqs: FaqsSelect<false> | FaqsSelect<true>;
@@ -464,6 +471,65 @@ export interface Review {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  reference?: string | null;
+  statut: 'en_attente' | 'demande' | 'confirmee' | 'annulee' | 'remboursee';
+  slot: number | Slot;
+  adventure: number | Adventure;
+  partner?: (number | null) | Partner;
+  nbAdultes: number;
+  nbEnfants: number;
+  message?: string | null;
+  customer?: (number | null) | Customer;
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone?: string | null;
+  prixAdulte: number;
+  prixEnfant?: number | null;
+  sousTotal: number;
+  remise?: number | null;
+  montantTotal: number;
+  remiseLibelle?: string | null;
+  stripeSessionId?: string | null;
+  stripePaymentIntentId?: string | null;
+  payeLe?: string | null;
+  moyenPaiement?: string | null;
+  confirmationEnvoyeeLe?: string | null;
+  annuleLe?: string | null;
+  montantRembourse?: number | null;
+  stripeRefundId?: string | null;
+  motifAnnulation?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  email: string;
+  prenom: string;
+  nom: string;
+  telephone?: string | null;
+  stripeCustomerId?: string | null;
+  newsletter?: boolean | null;
+  notes?: string | null;
+  bookings?: {
+    docs?: (number | Booking)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
  */
 export interface Page {
@@ -569,6 +635,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'slots';
         value: number | Slot;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: number | Customer;
       } | null)
     | ({
         relationTo: 'regions';
@@ -751,6 +825,59 @@ export interface SlotsSelect<T extends boolean = true> {
   placesReservees?: T;
   prix?: T;
   note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  reference?: T;
+  statut?: T;
+  slot?: T;
+  adventure?: T;
+  partner?: T;
+  nbAdultes?: T;
+  nbEnfants?: T;
+  message?: T;
+  customer?: T;
+  prenom?: T;
+  nom?: T;
+  email?: T;
+  telephone?: T;
+  prixAdulte?: T;
+  prixEnfant?: T;
+  sousTotal?: T;
+  remise?: T;
+  montantTotal?: T;
+  remiseLibelle?: T;
+  stripeSessionId?: T;
+  stripePaymentIntentId?: T;
+  payeLe?: T;
+  moyenPaiement?: T;
+  confirmationEnvoyeeLe?: T;
+  annuleLe?: T;
+  montantRembourse?: T;
+  stripeRefundId?: T;
+  motifAnnulation?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  email?: T;
+  prenom?: T;
+  nom?: T;
+  telephone?: T;
+  stripeCustomerId?: T;
+  newsletter?: T;
+  notes?: T;
+  bookings?: T;
   updatedAt?: T;
   createdAt?: T;
 }

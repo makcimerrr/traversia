@@ -9,6 +9,8 @@ import { buildConfig } from "payload"
 import sharp from "sharp"
 
 import { Adventures } from "./collections/Adventures"
+import { Bookings } from "./collections/Bookings"
+import { Customers } from "./collections/Customers"
 import { Faqs } from "./collections/Faqs"
 import { Media } from "./collections/Media"
 import { Messages } from "./collections/Messages"
@@ -46,6 +48,8 @@ export default buildConfig({
   collections: [
     Adventures,
     Slots,
+    Bookings,
+    Customers,
     Regions,
     Partners,
     Faqs,

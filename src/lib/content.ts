@@ -76,7 +76,7 @@ function toMedia(value: number | MediaDoc | null | undefined): MediaRef | undefi
   }
 }
 
-function toAdventure(doc: AdventureDoc): Adventure {
+export function toAdventure(doc: AdventureDoc): Adventure {
   const region = populated(doc.region)
   const partner = populated(doc.partner)
   const difficulty = (Number(doc.difficulty) || 1) as Difficulty
@@ -168,7 +168,7 @@ function toPartner(doc: PartnerDoc): Partner {
   }
 }
 
-function toSlot(doc: SlotDoc): Slot | undefined {
+export function toSlot(doc: SlotDoc): Slot | undefined {
   const adventure = populated(doc.adventure)
   const partner = populated(doc.partner)
   if (!adventure || !partner) return undefined
