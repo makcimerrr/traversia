@@ -6,6 +6,7 @@ import {
   FAQS_DEMO,
   PAGES_DEMO,
   PARTNERS_DEMO,
+  POSTS_DEMO,
   REGIONS_DEMO,
   REVIEWS_DEMO,
   SETTINGS_DEMO,
@@ -22,7 +23,7 @@ import type { Adventure as AdventureDoc, Page as PageDoc } from "../payload-type
  * Usage : `pnpm seed` (nécessite DATABASE_URL et PAYLOAD_SECRET).
  */
 
-type CollectionSlug = "regions" | "partners" | "adventures" | "slots" | "faqs" | "reviews" | "pages"
+type CollectionSlug = "regions" | "partners" | "adventures" | "slots" | "faqs" | "reviews" | "pages" | "posts"
 
 const payload = await getPayload({ config })
 const log = (message: string) => payload.logger.info(message)
@@ -255,6 +256,29 @@ for (const page of PAGES_DEMO) {
     },
   })
   log(`Création — ${page.title}`)
+}
+
+// --- Articles ---------------------------------------------------------------
+for (const post of POSTS_DEMO) {
+  const existing = await payload.find({ collection: "posts", where: { slug: { equals: post.slug } }, limit: 1, depth: 0 })
+  if (existing.docs[0]) {
+    log(`Conservé — ${post.title}`)
+    continue
+  }
+  await payload.create({
+    collection: "posts",
+    data: {
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt,
+      publie: true,
+      publishedAt: `${post.publishedAt}T12:00:00.000Z`,
+      tags: post.tags as ("actualites" | "recits" | "conseils" | "territoire")[],
+      content: lexicalFromBlocks(post.body),
+      adventures: post.adventureSlugs.map((s) => adventureIds.get(s)).filter((id): id is number => Boolean(id)),
+    },
+  })
+  log(`Création — ${post.title}`)
 }
 
 // --- Paramètres -------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { ADVENTURES } from "./adventures"
-import type { Faq, Page, Partner, Region, Review, SiteSettings, Slot } from "./types"
+import type { Faq, Page, Partner, Post, Region, Review, SiteSettings, Slot } from "./types"
 
 /**
  * Contenu de démonstration des entités autres que les aventures.
@@ -373,6 +373,85 @@ export const PAGES_DEMO: Page[] = [
           heading: "Aptitude et sécurité",
           paragraphs: [
             "Chaque participant déclare savoir nager 25 mètres et ne présenter aucune contre-indication médicale. Les consignes du guide s'imposent à tous pendant la sortie.",
+          ],
+        },
+      ],
+    },
+  },
+]
+
+export const POSTS_DEMO: Post[] = [
+  {
+    slug: "ouverture-calendrier-2027",
+    title: "Le calendrier 2027 ouvre en février",
+    excerpt:
+      "Sept parcours, un samedi sur deux d'avril à octobre, et deux nouveautés en préparation sur la Vire. Voici comment nous construisons une saison.",
+    publishedAt: "2026-10-01",
+    tags: ["actualites"],
+    adventureSlugs: [],
+    body: {
+      kind: "paragraphs",
+      blocks: [
+        {
+          paragraphs: [
+            "Chaque hiver, nous retraçons. Les sentiers bougent, les accès à l'eau aussi, et un parcours qui tenait en sept heures en juin peut en demander huit en octobre. Le calendrier 2027 sera publié le 1er février, avec les premières dates fin avril.",
+            "Les groupes restent limités à douze personnes. Les créneaux des parcours engagés, la Roche d'Oëtre et les Gorges de la Souleuvre, sont ouverts à huit.",
+          ],
+        },
+        {
+          heading: "Ce qui change",
+          paragraphs: [
+            "La réservation se fait désormais entièrement en ligne, avec paiement sécurisé et confirmation immédiate. Les informations pratiques, la liste du matériel et la trace GPX arrivent par e-mail dans la foulée.",
+          ],
+        },
+      ],
+    },
+  },
+  {
+    slug: "choisir-son-premier-parcours",
+    title: "Choisir son premier pack aventure",
+    excerpt:
+      "Découverte, facile, soutenu, sportif, engagé : ce que recouvrent nos cinq niveaux, et comment choisir sans se tromper.",
+    publishedAt: "2026-09-12",
+    tags: ["conseils"],
+    adventureSlugs: ["vallee-de-l-eure", "boucle-de-la-seine"],
+    body: {
+      kind: "paragraphs",
+      blocks: [
+        {
+          paragraphs: [
+            "La difficulté annoncée sur chaque fiche combine trois choses : le dénivelé de la randonnée, la technicité de la rivière et la durée totale. Un parcours Découverte se fait avec des enfants de huit ans ; un parcours Engagé demande une vraie habitude de l'effort long.",
+          ],
+        },
+        {
+          heading: "Pour une première fois",
+          paragraphs: [
+            "La Vallée de l'Eure et la Boucle des Andelys sont nos deux portes d'entrée : peu de dénivelé, eau plate, une journée complète sans jamais forcer. Si vous marchez régulièrement, la Suisse Normande est le bon cran au-dessus.",
+          ],
+        },
+        {
+          heading: "Ce qui compte vraiment",
+          paragraphs: [
+            "Pas l'expérience du canoë, que l'on apprend en vingt minutes sur berge, mais la capacité à marcher plusieurs heures avec un sac léger. En cas de doute, écrivez-nous : nous répondons honnêtement.",
+          ],
+        },
+      ],
+    },
+  },
+  {
+    slug: "la-rouvre-en-octobre",
+    title: "La Rouvre en octobre",
+    excerpt: "Récit d'une reconnaissance d'automne dans les gorges, entre niveaux d'eau capricieux et lumière rasante.",
+    publishedAt: "2026-08-20",
+    tags: ["recits", "territoire"],
+    adventureSlugs: ["roche-d-oetre"],
+    body: {
+      kind: "paragraphs",
+      blocks: [
+        {
+          paragraphs: [
+            "On part de Pont-d'Ouilly à huit heures, dans une brume qui tient jusqu'au belvédère. Le sentier des Corniches est humide, les passages câblés demandent de la lenteur. Au sommet, la vallée se découvre d'un coup, et l'on comprend pourquoi la Roche a ce nom.",
+            "La descente de la Rouvre, l'après-midi, se mérite : l'eau est basse, deux seuils demandent un portage court. C'est aussi ce qui en fait une rivière différente à chaque saison.",
           ],
         },
       ],

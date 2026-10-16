@@ -1,5 +1,7 @@
 import Link from "next/link"
 
+import { ManageCookiesLink } from "@/components/site/consent"
+import { NewsletterForm } from "@/components/site/newsletter-form"
 import { getSettings } from "@/lib/content"
 
 const COLUMNS = [
@@ -11,6 +13,7 @@ const COLUMNS = [
       { href: "/a-propos", label: "À propos" },
       { href: "/partenaires", label: "Partenaires" },
       { href: "/faq", label: "Questions fréquentes" },
+      { href: "/blog", label: "Actualités" },
       { href: "/contact", label: "Contact" },
     ],
   },
@@ -32,7 +35,7 @@ export async function SiteFooter() {
 
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(2,minmax(0,1fr))] lg:px-8">
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.4fr_repeat(2,minmax(0,1fr))_1.2fr] lg:px-8">
         <div className="max-w-sm">
           <p className="font-display text-2xl">Traversia</p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
@@ -82,6 +85,13 @@ export async function SiteFooter() {
             </ul>
           </div>
         ))}
+
+        <div>
+          <p className="label text-muted-foreground">Lettre d&apos;information</p>
+          <div className="mt-5">
+            <NewsletterForm />
+          </div>
+        </div>
       </div>
 
       <div className="border-t border-border">
@@ -89,7 +99,10 @@ export async function SiteFooter() {
           <p>
             © {new Date().getFullYear()} {settings.raisonSociale || "Traversia"} — Tous droits réservés
           </p>
-          {settings.immatriculationTourisme && <p>Immatriculation {settings.immatriculationTourisme}</p>}
+          <p className="flex flex-wrap gap-4">
+            {settings.immatriculationTourisme && <span>Immatriculation {settings.immatriculationTourisme}</span>}
+            <ManageCookiesLink />
+          </p>
         </div>
       </div>
     </footer>

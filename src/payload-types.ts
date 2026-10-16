@@ -78,7 +78,9 @@ export interface Config {
     faqs: Faq;
     reviews: Review;
     pages: Page;
+    posts: Post;
     messages: Message;
+    subscribers: Subscriber;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -117,7 +119,9 @@ export interface Config {
     faqs: FaqsSelect<false> | FaqsSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
     messages: MessagesSelect<false> | MessagesSelect<true>;
+    subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -650,6 +654,41 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  slug: string;
+  publie?: boolean | null;
+  publishedAt: string;
+  cover?: (number | null) | Media;
+  tags?: ('actualites' | 'recits' | 'conseils' | 'territoire')[] | null;
+  /**
+   * Deux phrases : affichées dans la liste et comme meta description.
+   */
+  excerpt: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  adventures?: (number | Adventure)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "messages".
  */
 export interface Message {
@@ -661,6 +700,20 @@ export interface Message {
   adventure?: (number | null) | Adventure;
   message: string;
   traite?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers".
+ */
+export interface Subscriber {
+  id: number;
+  email: string;
+  prenom?: string | null;
+  source?: ('site' | 'reservation' | 'import') | null;
+  actif?: boolean | null;
+  consentementLe?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -759,8 +812,16 @@ export interface PayloadLockedDocument {
         value: number | Page;
       } | null)
     | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
         relationTo: 'messages';
         value: number | Message;
+      } | null)
+    | ({
+        relationTo: 'subscribers';
+        value: number | Subscriber;
       } | null)
     | ({
         relationTo: 'media';
@@ -1108,6 +1169,23 @@ export interface PagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  publie?: T;
+  publishedAt?: T;
+  cover?: T;
+  tags?: T;
+  excerpt?: T;
+  content?: T;
+  adventures?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "messages_select".
  */
 export interface MessagesSelect<T extends boolean = true> {
@@ -1118,6 +1196,19 @@ export interface MessagesSelect<T extends boolean = true> {
   adventure?: T;
   message?: T;
   traite?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers_select".
+ */
+export interface SubscribersSelect<T extends boolean = true> {
+  email?: T;
+  prenom?: T;
+  source?: T;
+  actif?: T;
+  consentementLe?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1248,6 +1339,15 @@ export interface SiteSetting {
   directeurPublication?: string | null;
   immatriculationTourisme?: string | null;
   assuranceRc?: string | null;
+  /**
+   * Ex. G-XXXXXXXXXX
+   */
+  gaId?: string | null;
+  metaPixelId?: string | null;
+  /**
+   * Le contenu de la balise meta google-site-verification.
+   */
+  googleSiteVerification?: string | null;
   delaiAnnulationJours?: number | null;
   /**
    * Ex. « Le calendrier 2027 ouvre en février. »
@@ -1276,6 +1376,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   directeurPublication?: T;
   immatriculationTourisme?: T;
   assuranceRc?: T;
+  gaId?: T;
+  metaPixelId?: T;
+  googleSiteVerification?: T;
   delaiAnnulationJours?: T;
   messageAccueil?: T;
   updatedAt?: T;

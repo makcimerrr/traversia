@@ -180,6 +180,28 @@ export type SiteSettings = {
   assuranceRc: string
   delaiAnnulationJours: number
   messageAccueil: string
+  gaId?: string
+  metaPixelId?: string
+  googleSiteVerification?: string
+}
+
+export type Post = {
+  slug: string
+  title: string
+  excerpt: string
+  /** AAAA-MM-JJ */
+  publishedAt: string
+  tags: string[]
+  cover?: MediaRef
+  body: PageBody
+  adventureSlugs: string[]
+}
+
+export const POST_TAG_LABELS: Record<string, string> = {
+  actualites: "Actualités",
+  recits: "Récits",
+  conseils: "Conseils",
+  territoire: "Territoire",
 }
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {

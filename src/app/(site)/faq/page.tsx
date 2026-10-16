@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { ButtonLink } from "@/components/site/button-link"
 import { FaqList } from "@/components/site/faq-list"
+import { JsonLd } from "@/components/site/json-ld"
 import { Container, Eyebrow, Section } from "@/components/site/section"
 import { getFaqs } from "@/lib/content"
 import { FAQ_CATEGORY_LABELS } from "@/lib/types"
@@ -20,6 +21,17 @@ export default async function FaqPage() {
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.reponse },
+          })),
+        }}
+      />
       <Container className="py-14 sm:py-20">
         <Eyebrow>Questions fréquentes</Eyebrow>
         <h1 className="mt-8 max-w-3xl text-[3rem] leading-[0.96] sm:text-6xl lg:text-7xl">

@@ -7,6 +7,7 @@ import {
   FAQS_DEMO,
   PAGES_DEMO,
   PARTNERS_DEMO,
+  POSTS_DEMO,
   REGIONS_DEMO,
   REVIEWS_DEMO,
   SETTINGS_DEMO,
@@ -20,6 +21,7 @@ import type {
   Media as MediaDoc,
   Page as PageDoc,
   Partner as PartnerDoc,
+  Post as PostDoc,
   Region as RegionDoc,
   Review as ReviewDoc,
   SiteSetting as SettingsDoc,
@@ -32,6 +34,7 @@ import type {
   MediaRef,
   Page,
   Partner,
+  Post,
   Region,
   Review,
   SiteSettings,
@@ -223,6 +226,19 @@ function toPage(doc: PageDoc): Page {
   }
 }
 
+function toPost(doc: PostDoc): Post {
+  return {
+    slug: doc.slug,
+    title: doc.title,
+    excerpt: doc.excerpt,
+    publishedAt: toDateKey(new Date(doc.publishedAt)),
+    tags: doc.tags ?? [],
+    cover: toMedia(doc.cover),
+    body: { kind: "lexical", data: doc.content },
+    adventureSlugs: (doc.adventures ?? []).map((a) => populated(a)?.slug).filter((s): s is string => Boolean(s)),
+  }
+}
+
 function toSettings(doc: SettingsDoc): SiteSettings {
   const text = (value: string | null | undefined, fallback = "") => value ?? fallback
   return {
@@ -243,6 +259,9 @@ function toSettings(doc: SettingsDoc): SiteSettings {
     assuranceRc: text(doc.assuranceRc),
     delaiAnnulationJours: num(doc.delaiAnnulationJours, 7),
     messageAccueil: text(doc.messageAccueil),
+    gaId: doc.gaId ?? undefined,
+    metaPixelId: doc.metaPixelId ?? undefined,
+    googleSiteVerification: doc.googleSiteVerification ?? undefined,
   }
 }
 
@@ -441,6 +460,29 @@ export async function getPages(): Promise<Page[]> {
 export async function getPage(slug: string): Promise<Page | undefined> {
   const pages = await getPages()
   return pages.find((p) => p.slug === slug)
+}
+
+export async function getPosts(): Promise<Post[]> {
+  const today = toDateKey(new Date())
+  return readOrDemo(
+    "posts",
+    async (payload) => {
+      const { docs } = await payload.find({
+        collection: "posts",
+        where: { and: [{ publie: { equals: true } }, { publishedAt: { less_than_equal: `${today}T23:59:59.999Z` } }] },
+        limit: 100,
+        sort: "-publishedAt",
+        depth: 1,
+      })
+      return docs.length ? docs.map(toPost) : POSTS_DEMO
+    },
+    () => POSTS_DEMO,
+  )
+}
+
+export async function getPost(slug: string): Promise<Post | undefined> {
+  const posts = await getPosts()
+  return posts.find((p) => p.slug === slug)
 }
 
 export async function getSettings(): Promise<SiteSettings> {

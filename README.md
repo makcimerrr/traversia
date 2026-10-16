@@ -110,6 +110,18 @@ dans le même champ du tunnel. Une carte cadeau s'achète sur
 et se consomme en une ou plusieurs fois ; le solde est recrédité en cas
 d'annulation.
 
+## Marketing et référencement
+
+- Journal (`/blog`) alimenté par la collection Articles ; lettre
+  d'information (collection Abonnés, formulaire du pied de page) ; avis
+  déposés par les clients après la sortie, publiés après relecture.
+- `sitemap.xml` et `robots.txt` générés ; données structurées schema.org
+  (organisation, parcours avec prix et note moyenne, FAQ, articles, fil
+  d'Ariane) ; vérification Search Console depuis les paramètres du site.
+- Google Analytics 4 et Meta Pixel se configurent dans les paramètres du
+  site (onglet Marketing) et ne se chargent qu'après consentement via le
+  bandeau cookies.
+
 ## Médias
 
 Les fichiers vont sur Vercel Blob, via `BLOB_READ_WRITE_TOKEN` (injecté
@@ -127,7 +139,8 @@ src/
     (payload)/       Administration et API Payload (fichiers générés, à ne pas modifier)
   collections/       Schémas Payload : Adventures, Slots (créneaux), Bookings,
                      Customers, PromoCodes, GiftCards, Regions, Partners,
-                     Faqs, Reviews, Pages, Messages, Media, Users
+                     Faqs, Reviews, Pages, Posts, Messages, Subscribers,
+                     Media, Users
   globals/           SiteSettings : coordonnées, informations légales
   components/
     adventures/      Fiche parcours, carrousel, jauge de difficulté, cartouche de mesures

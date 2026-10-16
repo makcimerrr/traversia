@@ -3,10 +3,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { CancelForm } from "@/components/booking/cancel-form"
+import { ReviewForm } from "@/components/booking/review-form"
 import { ButtonLink } from "@/components/site/button-link"
 import { Container, Eyebrow, Section } from "@/components/site/section"
 import { daysUntil, getBookingByReference, reconcileCheckoutSession } from "@/lib/bookings"
 import { getSettings } from "@/lib/content"
+import { toDateKey } from "@/lib/demo"
 import { formatDateLong, formatPrice } from "@/lib/format"
 import { siteUrl } from "@/lib/site-url"
 import { BOOKING_STATUS_LABELS } from "@/lib/types"
@@ -52,6 +54,7 @@ export default async function ReservationPage({ params, searchParams }: PageProp
     booking.montantCarteCadeau > 0 ? ["Carte cadeau", `− ${formatPrice(booking.montantCarteCadeau)}`] : ["", ""],
     booking.numeroFacture ? ["Facture", booking.numeroFacture] : ["", ""],
   ].filter(([, v]) => v)
+  const past = slot.date < toDateKey(new Date())
   const canSelfCancel =
     (booking.statut === "confirmee" || booking.statut === "demande") &&
     daysUntil(slot.date) >= settings.delaiAnnulationJours
@@ -121,7 +124,17 @@ export default async function ReservationPage({ params, searchParams }: PageProp
               </figure>
             )}
 
-            {(booking.statut === "confirmee" || booking.statut === "demande") && (
+            {booking.statut === "confirmee" && past && (
+              <div className="mt-10">
+                <h2 className="label text-muted-foreground">Votre avis</h2>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                  Comment s&apos;est passée la journée ? Votre avis aide les prochains à choisir.
+                </p>
+                <ReviewForm reference={booking.reference} />
+              </div>
+            )}
+
+            {(booking.statut === "confirmee" || booking.statut === "demande") && !past && (
               <div className="mt-10">
                 <h2 className="label text-muted-foreground">Annuler</h2>
                 {canSelfCancel ? (

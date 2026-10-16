@@ -54,6 +54,20 @@ export const SiteSettings: GlobalConfig = {
           ],
         },
         {
+          label: "Marketing",
+          description: "Les scripts de mesure ne se chargent qu'après consentement du visiteur.",
+          fields: [
+            { name: "gaId", type: "text", label: "Identifiant Google Analytics 4", admin: { description: "Ex. G-XXXXXXXXXX" } },
+            { name: "metaPixelId", type: "text", label: "Identifiant Meta Pixel" },
+            {
+              name: "googleSiteVerification",
+              type: "text",
+              label: "Code de vérification Google Search Console",
+              admin: { description: "Le contenu de la balise meta google-site-verification." },
+            },
+          ],
+        },
+        {
           label: "Réservation",
           fields: [
             {

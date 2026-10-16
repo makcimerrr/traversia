@@ -17,10 +17,12 @@ import { Media } from "./collections/Media"
 import { Messages } from "./collections/Messages"
 import { Pages } from "./collections/Pages"
 import { Partners } from "./collections/Partners"
+import { Posts } from "./collections/Posts"
 import { PromoCodes } from "./collections/PromoCodes"
 import { Regions } from "./collections/Regions"
 import { Reviews } from "./collections/Reviews"
 import { Slots } from "./collections/Slots"
+import { Subscribers } from "./collections/Subscribers"
 import { Users } from "./collections/Users"
 import { SiteSettings } from "./globals/SiteSettings"
 
@@ -59,7 +61,9 @@ export default buildConfig({
     Faqs,
     Reviews,
     Pages,
+    Posts,
     Messages,
+    Subscribers,
     Media,
     Users,
   ],

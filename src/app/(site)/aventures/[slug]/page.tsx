@@ -12,9 +12,11 @@ import { UpcomingSlots } from "@/components/adventures/upcoming-slots"
 import { ButtonLink } from "@/components/site/button-link"
 import { ElevationProfile } from "@/components/site/elevation-profile"
 import { FaqList } from "@/components/site/faq-list"
+import { JsonLd } from "@/components/site/json-ld"
 import { Container, Eyebrow, Section } from "@/components/site/section"
 import { getAdventure, getAdventures, getFaqs, getReviews, getSlots } from "@/lib/content"
 import { formatHours, formatPrice } from "@/lib/format"
+import { siteUrlFromEnv } from "@/lib/site-url"
 
 export async function generateStaticParams() {
   const adventures = await getAdventures()
@@ -68,8 +70,48 @@ export default async function AdventurePage({ params }: PageProps<"/aventures/[s
       ? `https://www.openstreetmap.org/?mlat=${rdv.lat}&mlon=${rdv.lng}#map=14/${rdv.lat}/${rdv.lng}`
       : undefined
 
+  const base = siteUrlFromEnv()
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: adventure.title,
+    description: adventure.intro,
+    image: adventure.cover?.url,
+    url: `${base}/aventures/${adventure.slug}`,
+    brand: { "@type": "Brand", name: "Traversia" },
+    category: "Pack aventure randonnée et canoë",
+    offers: {
+      "@type": "Offer",
+      price: adventure.prix,
+      priceCurrency: "EUR",
+      availability: openSlots.length ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+      url: `${base}/aventures/${adventure.slug}/reserver`,
+      areaServed: adventure.regionName,
+    },
+    aggregateRating:
+      reviews.length > 0
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: (reviews.reduce((s, r) => s + r.note, 0) / reviews.length).toFixed(1),
+            reviewCount: reviews.length,
+            bestRating: 5,
+          }
+        : undefined,
+  }
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: base },
+      { "@type": "ListItem", position: 2, name: "Les aventures", item: `${base}/aventures` },
+      { "@type": "ListItem", position: 3, name: adventure.title, item: `${base}/aventures/${adventure.slug}` },
+    ],
+  }
+
   return (
     <>
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumb} />
       {/* ------------------------------ En-tête ------------------------------ */}
       <Container className="py-10 sm:py-14">
         <Link
