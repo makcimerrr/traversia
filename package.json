@@ -11,7 +11,8 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run src/scripts/seed.ts",
-    "smoke:booking": "cross-env NODE_OPTIONS=\"--no-deprecation --conditions=react-server\" payload run src/scripts/smoke-booking.ts"
+    "smoke:booking": "cross-env NODE_OPTIONS=\"--no-deprecation --conditions=react-server\" payload run src/scripts/smoke-booking.ts",
+    "test:account": "cross-env NODE_OPTIONS=\"--no-deprecation --conditions=react-server\" payload run src/scripts/test-account.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.88.0",
