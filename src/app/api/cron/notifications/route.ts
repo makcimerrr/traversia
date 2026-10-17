@@ -1,14 +1,12 @@
 import { getPayloadClient } from "@/lib/payload"
-import { getSettings } from "@/lib/content"
 import { toDateKey } from "@/lib/demo"
-import { traceOpensAt } from "@/lib/customer-account"
 import { pushToCustomers } from "@/lib/push"
 
 /**
- * Tâche planifiée (Vercel Cron, toutes les heures) : notifications push
- * programmées. Rappel la veille de la sortie à partir de 17 h (Paris), et
- * annonce de l'ouverture du tracé à l'heure prévue. Chaque envoi est daté
- * sur la réservation pour ne jamais partir deux fois.
+ * Tâche planifiée (Vercel Cron, une fois par jour à 16 h UTC, soit 17 h ou
+ * 18 h à Paris) : rappel push la veille de la sortie. Chaque envoi est daté
+ * sur la réservation pour ne jamais partir deux fois. L'annonce de
+ * l'ouverture du tracé, elle, est programmée localement par l'application.
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
@@ -17,9 +15,7 @@ export async function GET(request: Request) {
   }
 
   const payload = await getPayloadClient()
-  const settings = await getSettings()
   const now = new Date()
-  const today = toDateKey(now)
   const tomorrow = toDateKey(new Date(now.getTime() + 86_400_000))
   const parisHour = Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hour12: false, timeZone: "Europe/Paris" }).format(now))
 
@@ -28,7 +24,7 @@ export async function GET(request: Request) {
     where: {
       and: [
         { statut: { equals: "confirmee" } },
-        { "slot.date": { greater_than_equal: `${today}T00:00:00.000Z` } },
+        { "slot.date": { greater_than_equal: `${tomorrow}T00:00:00.000Z` } },
         { "slot.date": { less_than: `${tomorrow}T23:59:59.999Z` } },
       ],
     },
@@ -38,7 +34,6 @@ export async function GET(request: Request) {
   })
 
   let rappels = 0
-  let ouvertures = 0
   for (const booking of docs) {
     const slot = typeof booking.slot === "object" ? booking.slot : null
     const adventure = typeof booking.adventure === "object" ? booking.adventure : null
@@ -56,18 +51,7 @@ export async function GET(request: Request) {
       await payload.update({ collection: "bookings", id: booking.id, data: { rappelJ1EnvoyeLe: now.toISOString() }, context: { skipRevalidate: true } })
       rappels++
     }
-
-    const opensAt = traceOpensAt(dateKey, heure, settings.ouvertureTraceHeures)
-    if (opensAt.getTime() <= now.getTime() && !booking.ouvertureTraceEnvoyeeLe && adventure.gpx) {
-      await pushToCustomers(payload, [customerId], {
-        title: "Le tracé est ouvert",
-        body: `${adventure.title} : le parcours et le guidage sont disponibles dans l'app.`,
-        data: { bookingId: String(booking.id), screen: "carte" },
-      })
-      await payload.update({ collection: "bookings", id: booking.id, data: { ouvertureTraceEnvoyeeLe: now.toISOString() }, context: { skipRevalidate: true } })
-      ouvertures++
-    }
   }
 
-  return Response.json({ examinees: docs.length, rappels, ouvertures })
+  return Response.json({ examinees: docs.length, rappels })
 }

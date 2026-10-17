@@ -141,11 +141,13 @@ en temps réel reste sur le téléphone : rien ne remonte au serveur.
 L'application enregistre son jeton Expo via `POST /api/customers/me/appareil`
 (`DELETE` à la déconnexion) ; les appareils sont visibles dans l'admin.
 Envois : confirmation de paiement et annulation par l'équipe (immédiats),
-rappel la veille à partir de 17 h et ouverture du tracé (tâche planifiée
-`/api/cron/notifications`, toutes les heures via Vercel Cron, protégée par
-`CRON_SECRET`). Chaque envoi est daté sur la réservation. L'API Expo ne
-demande pas de clé ; `EXPO_ACCESS_TOKEN` n'est utile que si la sécurité
-renforcée est activée dans le tableau de bord Expo.
+rappel la veille (tâche planifiée `/api/cron/notifications`, une fois par
+jour à 16 h UTC via Vercel Cron, protégée par `CRON_SECRET` ; le plan Hobby
+de Vercel n'autorise qu'une exécution quotidienne). L'annonce de
+l'ouverture du tracé est une notification locale programmée par l'app.
+Chaque envoi serveur est daté sur la réservation. L'API Expo ne demande
+pas de clé ; `EXPO_ACCESS_TOKEN` n'est utile que si la sécurité renforcée
+est activée dans le tableau de bord Expo.
 
 ## Marketing et référencement
 

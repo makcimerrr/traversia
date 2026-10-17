@@ -537,7 +537,6 @@ export interface Booking {
   moyenPaiement?: string | null;
   confirmationEnvoyeeLe?: string | null;
   rappelJ1EnvoyeLe?: string | null;
-  ouvertureTraceEnvoyeeLe?: string | null;
   annuleLe?: string | null;
   montantRembourse?: number | null;
   stripeRefundId?: string | null;
@@ -1090,7 +1089,6 @@ export interface BookingsSelect<T extends boolean = true> {
   moyenPaiement?: T;
   confirmationEnvoyeeLe?: T;
   rappelJ1EnvoyeLe?: T;
-  ouvertureTraceEnvoyeeLe?: T;
   annuleLe?: T;
   montantRembourse?: T;
   stripeRefundId?: T;
