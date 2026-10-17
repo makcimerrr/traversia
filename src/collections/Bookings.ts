@@ -190,6 +190,13 @@ export const Bookings: CollectionConfig = {
               ],
             },
             { name: "confirmationEnvoyeeLe", type: "date", label: "Confirmation envoyée le", admin: { readOnly: true } },
+            {
+              type: "row",
+              fields: [
+                { name: "rappelJ1EnvoyeLe", type: "date", label: "Rappel J-1 (push) envoyé le", admin: { readOnly: true } },
+                { name: "ouvertureTraceEnvoyeeLe", type: "date", label: "Ouverture du tracé (push) envoyée le", admin: { readOnly: true } },
+              ],
+            },
           ],
         },
         {

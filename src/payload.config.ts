@@ -11,6 +11,7 @@ import sharp from "sharp"
 import { Adventures } from "./collections/Adventures"
 import { Bookings } from "./collections/Bookings"
 import { Customers } from "./collections/Customers"
+import { Devices } from "./collections/Devices"
 import { Faqs } from "./collections/Faqs"
 import { GiftCards } from "./collections/GiftCards"
 import { Media } from "./collections/Media"
@@ -54,6 +55,7 @@ export default buildConfig({
     Slots,
     Bookings,
     Customers,
+    Devices,
     PromoCodes,
     GiftCards,
     Regions,

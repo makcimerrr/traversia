@@ -5,6 +5,7 @@ import type { Payload } from "payload"
 import { toAdventure, toSlot, getSettings } from "./content"
 import { issueActivationUrl } from "./customer-account"
 import { toDateKey } from "./demo"
+import { formatDateLong } from "./format"
 import { DiscountError, resolveDiscount, type Discount } from "./discounts"
 import {
   adminBookingEmail,
@@ -15,6 +16,7 @@ import {
 } from "./email"
 import { getPayloadClient, usePayload } from "./payload"
 import { quote } from "./pricing"
+import { pushToCustomers } from "./push"
 import { getStripe, stripeEnabled } from "./stripe"
 import type { Booking, BookingStatus } from "./types"
 import type {
@@ -362,6 +364,13 @@ export async function confirmBooking(
         context: { skipRevalidate: true },
       })
     }
+    if (customerId) {
+      await pushToCustomers(payload, [customerId], {
+        title: "Réservation confirmée",
+        body: `${booking.adventure.title}, ${formatDateLong(booking.slot.date)}. Tout est dans l'app.`,
+        data: { bookingId: String(bookingId), screen: "reservation" },
+      }).catch(() => undefined)
+    }
   }
   return booking
 }
@@ -461,6 +470,14 @@ export async function cancelBooking(bookingId: number | string, options: CancelO
     const settings = await getSettings()
     const mail = bookingCancellationEmail(booking, settings, options.siteUrl, options.motif, refunded + (current.montantCarteCadeau ?? 0))
     await sendEmail({ to: booking.email, replyTo: settings.email, ...mail })
+    const customerId = typeof current.customer === "object" ? current.customer?.id : current.customer
+    if (customerId && options.origine === "admin") {
+      await pushToCustomers(payload, [customerId], {
+        title: "Réservation annulée",
+        body: `${booking.adventure.title} : ${options.motif}`,
+        data: { bookingId: String(bookingId), screen: "reservation" },
+      }).catch(() => undefined)
+    }
     if (options.origine === "client") {
       const admin = adminBookingEmail(booking, options.siteUrl)
       await sendEmail({ to: settings.email, replyTo: booking.email, ...admin })

@@ -1,7 +1,7 @@
 import type { CollectionConfig } from "payload"
 
 import { adminOnly, adminOrSelf, isAdmin } from "../lib/access"
-import { accountLinkEndpoint } from "../lib/customers-endpoints"
+import { accountLinkEndpoint, registerDeviceEndpoint, unregisterDeviceEndpoint } from "../lib/customers-endpoints"
 
 /**
  * Un client : identifié par son courriel, retrouvé à chaque réservation.
@@ -18,7 +18,7 @@ export const Customers: CollectionConfig = {
     forgotPassword: { expiration: 48 * 60 * 60 * 1000 },
     cookies: { sameSite: "Lax", secure: process.env.NODE_ENV === "production" },
   },
-  endpoints: [accountLinkEndpoint],
+  endpoints: [accountLinkEndpoint, registerDeviceEndpoint, unregisterDeviceEndpoint],
   admin: {
     group: "Réservations",
     useAsTitle: "email",

@@ -136,6 +136,17 @@ L'heure d'ouverture du tracé est le rendez-vous moins le délai « Tracé GPX
 disponible » des paramètres du site (trois heures par défaut). La position
 en temps réel reste sur le téléphone : rien ne remonte au serveur.
 
+### Notifications push
+
+L'application enregistre son jeton Expo via `POST /api/customers/me/appareil`
+(`DELETE` à la déconnexion) ; les appareils sont visibles dans l'admin.
+Envois : confirmation de paiement et annulation par l'équipe (immédiats),
+rappel la veille à partir de 17 h et ouverture du tracé (tâche planifiée
+`/api/cron/notifications`, toutes les heures via Vercel Cron, protégée par
+`CRON_SECRET`). Chaque envoi est daté sur la réservation. L'API Expo ne
+demande pas de clé ; `EXPO_ACCESS_TOKEN` n'est utile que si la sécurité
+renforcée est activée dans le tableau de bord Expo.
+
 ## Marketing et référencement
 
 - Journal (`/blog`) alimenté par la collection Articles ; lettre

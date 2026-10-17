@@ -72,6 +72,7 @@ export interface Config {
     slots: Slot;
     bookings: Booking;
     customers: Customer;
+    devices: Device;
     'promo-codes': PromoCode;
     'gift-cards': GiftCard;
     regions: Region;
@@ -113,6 +114,7 @@ export interface Config {
     slots: SlotsSelect<false> | SlotsSelect<true>;
     bookings: BookingsSelect<false> | BookingsSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
+    devices: DevicesSelect<false> | DevicesSelect<true>;
     'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
     'gift-cards': GiftCardsSelect<false> | GiftCardsSelect<true>;
     regions: RegionsSelect<false> | RegionsSelect<true>;
@@ -534,6 +536,8 @@ export interface Booking {
   payeLe?: string | null;
   moyenPaiement?: string | null;
   confirmationEnvoyeeLe?: string | null;
+  rappelJ1EnvoyeLe?: string | null;
+  ouvertureTraceEnvoyeeLe?: string | null;
   annuleLe?: string | null;
   montantRembourse?: number | null;
   stripeRefundId?: string | null;
@@ -653,6 +657,22 @@ export interface GiftCard {
     totalDocs?: number;
   };
   notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devices".
+ */
+export interface Device {
+  id: number;
+  customer: number | Customer;
+  token: string;
+  platform?: ('ios' | 'android' | 'other') | null;
+  /**
+   * Désactivé quand Expo signale un appareil désinscrit.
+   */
+  actif?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -820,6 +840,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'customers';
         value: number | Customer;
+      } | null)
+    | ({
+        relationTo: 'devices';
+        value: number | Device;
       } | null)
     | ({
         relationTo: 'promo-codes';
@@ -1065,6 +1089,8 @@ export interface BookingsSelect<T extends boolean = true> {
   payeLe?: T;
   moyenPaiement?: T;
   confirmationEnvoyeeLe?: T;
+  rappelJ1EnvoyeLe?: T;
+  ouvertureTraceEnvoyeeLe?: T;
   annuleLe?: T;
   montantRembourse?: T;
   stripeRefundId?: T;
@@ -1102,6 +1128,18 @@ export interface CustomersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devices_select".
+ */
+export interface DevicesSelect<T extends boolean = true> {
+  customer?: T;
+  token?: T;
+  platform?: T;
+  actif?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
